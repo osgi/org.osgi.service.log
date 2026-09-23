@@ -1,0 +1,243 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.osgi.tck</groupId>
+		<artifactId>org.osgi.tck.service.log</artifactId>
+		<version>${revision}</version>
+	</parent>
+	<groupId>org.osgi.tck</groupId>
+	<artifactId>org.osgi.test.run.log</artifactId>
+
+	<properties>
+		<!-- The keystore of the secure suites, as an absolute path. The test VM
+		     runs from a working directory below target/, so a path relative to
+		     this module would not resolve there; the workspace build likewise
+		     hands the framework an absolute path. -->
+		<tck.keystore>${project.basedir}/../keystore</tck.keystore>
+	</properties>
+
+	<!--
+		Manage JUnit here on purpose: the parent POM sets the family to 5.12.2,
+		and with that version bnd's bundle engine no longer discovers any tests
+		in the run. The BOM pins Jupiter and Platform together to the versions
+		the original build used, transitive dependencies included.
+	-->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>5.8.2</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.osgi.tck</groupId>
+			<artifactId>org.osgi.test.cases.log</artifactId>
+			<version>${revision}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.configadmin</artifactId>
+			<version>1.9.26</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.service.cm</artifactId>
+			<version>1.6.0</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.platform</groupId>
+			<artifactId>org.eclipse.osgi</artifactId>
+			<version>3.18.100</version>
+			<scope>runtime</scope>
+		</dependency>
+		<!--
+			The classic tester used by the launch suites: they start the
+			framework themselves (-runframework none), so the tester lives on
+			the class path instead of being a bundle inside the framework.
+		-->
+		<dependency>
+			<groupId>biz.aQute.bnd</groupId>
+			<artifactId>biz.aQute.junit</artifactId>
+			<!-- The classic tester stays on the old bnd: 7.2.3 is not published
+			     for this artifact. Verified to work alongside a 7.2.3 launcher. -->
+			<version>${bnd.old.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<!--
+			The test infrastructure, at the versions the original build used.
+			It is declared as a real dependency because the bnd resolver only
+			sees what is in the Maven tree — listing it in the bndrun alone is
+			not enough.
+		-->
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>3.23.1</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>5.8.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>5.8.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-params</artifactId>
+			<version>5.8.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-commons</artifactId>
+			<version>1.8.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-engine</artifactId>
+			<version>1.8.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-launcher</artifactId>
+			<version>1.8.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.vintage</groupId>
+			<artifactId>junit-vintage-engine</artifactId>
+			<version>5.8.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest</artifactId>
+			<version>2.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.awaitility</groupId>
+			<artifactId>awaitility</artifactId>
+			<version>4.2.0</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.servicemix.bundles</groupId>
+			<artifactId>org.apache.servicemix.bundles.junit</artifactId>
+			<version>4.13.2_1</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.opentest4j</groupId>
+			<artifactId>opentest4j</artifactId>
+			<version>1.2.0</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.test.common</artifactId>
+			<version>1.2.0</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.test.assertj.framework</artifactId>
+			<version>1.2.0</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.test.junit5</artifactId>
+			<version>1.2.0</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.test.junit4</artifactId>
+			<version>1.2.0</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>4.6.1</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.bytebuddy</groupId>
+			<artifactId>byte-buddy</artifactId>
+			<version>1.12.10</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.bytebuddy</groupId>
+			<artifactId>byte-buddy-agent</artifactId>
+			<version>1.12.10</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.objenesis</groupId>
+			<artifactId>objenesis</artifactId>
+			<version>3.2</version>
+			<scope>runtime</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>biz.aQute.bnd</groupId>
+				<artifactId>bnd-resolver-maven-plugin</artifactId>
+				<!-- The parent already binds resolve to pre-integration-test
+				     (execution "resolve-test") with this same configuration. -->
+				<configuration>
+					<failOnChanges>false</failOnChanges>
+					<writeOnChanges>true</writeOnChanges>
+					<bndruns>
+						<bndrun>tck.bndrun</bndrun>
+					</bndruns>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>biz.aQute.bnd</groupId>
+				<artifactId>bnd-testing-maven-plugin</artifactId>
+				<!-- Deliberately NOT ${bnd.version}: with the 7.2.3 launcher and
+				     the 6.4.0 classic tester the junit-platform suites hang
+				     before writing a single result. Only the launch suites,
+				     which use the classic tester, come up. -->
+				<version>${bnd.old.version}</version>
+			</plugin>
+			<!-- Renders the bnd-testing JUnit XML into a readable HTML report:
+			     mvn surefire-report:report-only -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+				<version>3.5.2</version>
+				<configuration>
+					<reportsDirectories>
+						<reportsDirectory>${project.build.directory}/test-reports/tck</reportsDirectory>
+					</reportsDirectories>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

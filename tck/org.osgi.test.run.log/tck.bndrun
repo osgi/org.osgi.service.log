@@ -1,0 +1,77 @@
+# No java: — the test VM is the same as the build's. A fixed path would
+# only be valid on one machine; the minimum version a run requires is
+# recorded as jdk.run.minimum in the POM.
+-tester: biz.aQute.tester.junit-platform
+
+-runee: JavaSE-11
+
+-resolve.effective: active
+
+-runvm: ${def;argLine}, -Djava.security.manager=allow
+
+-runproperties: \
+	org.osgi.test.cases.log.launch.bundles=
+
+-runfw: org.eclipse.osgi
+
+
+# API overlays on the framework classpath (exports become system packages)
+-runpath: \
+
+
+# This will help us keep -runbundles sorted
+-runstartlevel: \
+    order=sortbynameversion,\
+    begin=-1
+
+-runrequires: \
+	bnd.identity;id='org.osgi.test.cases.log',\
+	bnd.identity;id='org.apache.felix.configadmin',\
+	bnd.identity;id='assertj-core';version='[3.23.1,3.23.2)',\
+	bnd.identity;id='junit-jupiter-api';version='[5.8.2,5.8.3)',\
+	bnd.identity;id='junit-jupiter-engine';version='[5.8.2,5.8.3)',\
+	bnd.identity;id='junit-jupiter-params';version='[5.8.2,5.8.3)',\
+	bnd.identity;id='junit-platform-commons';version='[1.8.2,1.8.3)',\
+	bnd.identity;id='junit-platform-engine';version='[1.8.2,1.8.3)',\
+	bnd.identity;id='junit-platform-launcher';version='[1.8.2,1.8.3)',\
+	bnd.identity;id='junit-vintage-engine';version='[5.8.2,5.8.3)',\
+	bnd.identity;id='org.hamcrest';version='[2.2.0,2.2.1)',\
+	bnd.identity;id='org.awaitility';version='[4.2.0,4.2.1)',\
+	bnd.identity;id='org.apache.servicemix.bundles.junit';version='[4.13.2.1,4.13.2.2)',\
+	bnd.identity;id='org.opentest4j';version='[1.2.0,1.2.1)',\
+	bnd.identity;id='org.osgi.test.common';version='[1.2.0,1.2.1)',\
+	bnd.identity;id='org.osgi.test.assertj.framework';version='[1.2.0,1.2.1)',\
+	bnd.identity;id='org.osgi.test.junit5';version='[1.2.0,1.2.1)',\
+	bnd.identity;id='org.osgi.test.junit4';version='[1.2.0,1.2.1)',\
+	bnd.identity;id='org.mockito.mockito-core';version='[4.6.1,4.6.2)',\
+	bnd.identity;id='net.bytebuddy.byte-buddy';version='[1.12.10,1.12.11)',\
+	bnd.identity;id='net.bytebuddy.byte-buddy-agent';version='[1.12.10,1.12.11)',\
+	bnd.identity;id='org.objenesis'
+
+# Test infrastructure for the junit-platform tester — mirrors the original
+# cnf/repo/osgi.tck.junit-platform lib that every TCK run carried
+-runbundles.tck: \
+	assertj-core;version='[3.23.1,3.23.2)',\
+	junit-jupiter-api;version='[5.8.2,5.8.3)',\
+	junit-jupiter-engine;version='[5.8.2,5.8.3)',\
+	junit-jupiter-params;version='[5.8.2,5.8.3)',\
+	junit-platform-commons;version='[1.8.2,1.8.3)',\
+	junit-platform-engine;version='[1.8.2,1.8.3)',\
+	junit-platform-launcher;version='[1.8.2,1.8.3)',\
+	junit-vintage-engine;version='[5.8.2,5.8.3)',\
+	org.hamcrest;version='[2.2.0,2.2.1)',\
+	org.awaitility;version='[4.2.0,4.2.1)',\
+	org.apache.servicemix.bundles.junit;version='[4.13.2.1,4.13.2.2)',\
+	org.opentest4j;version='[1.2.0,1.2.1)',\
+	org.osgi.test.common;version='[1.2.0,1.2.1)',\
+	org.osgi.test.assertj.framework;version='[1.2.0,1.2.1)',\
+	org.osgi.test.junit5;version='[1.2.0,1.2.1)',\
+	org.osgi.test.junit4;version='[1.2.0,1.2.1)',\
+	org.mockito.mockito-core;version='[4.6.1,4.6.2)',\
+	net.bytebuddy.byte-buddy;version='[1.12.10,1.12.11)',\
+	net.bytebuddy.byte-buddy-agent;version='[1.12.10,1.12.11)',\
+	org.objenesis
+
+
+# -runbundles is calculated by the bnd-resolver-maven-plugin during the run
+-runbundles:

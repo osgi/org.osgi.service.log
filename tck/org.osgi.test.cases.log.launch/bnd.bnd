@@ -1,5 +1,4 @@
 # Set javac settings from JDT prefs
--include: ${includes}/jdt.bnd, ${includes}/osgi.tck.junit4-runpath.bnd, ${includes}/tck.bnd, ${includes}/core.bnd
 
 Bundle-Description					: Framework test cases.
 
@@ -8,17 +7,20 @@ Bundle-Description					: Framework test cases.
 	${p}.junit
 	
 	
--buildpath = \
-	org.osgi.test.support;version=project,\
-    org.osgi.framework;maven-scope=provided;version=1.8, \
-    org.osgi.resource;maven-scope=provided;version=1.0, \
-	org.osgi.service.log;version=latest
 
--runbundles:
 -runframework: none
 
--runproperties = ${runproperties}, \
-	${p}.storageroot=${target-dir}/${p}.testStorageRoot, \
-	${p}.bundles=
 
 -includeresource = log.launch.tb1.jar
+
+p: org.osgi.test.cases.log.launch
+
+# Maven build: workspace includes replaced inline (from cnf/includes and build.bnd in osgi/osgi)
+# -make.maven, not -make: the key is a map entry and would displace
+# a project-level -make (webcontainer also builds .war recipes this
+# way). bnd merges all -make.* entries.
+-make.maven: (*).(jar); type=bnd; recipe="bnd/$1.bnd"
+
+testcases.junit3: ${classes;EXTENDS;junit.framework.TestCase;CONCRETE}
+testcases.junit4: ${classes;HIERARCHY_ANNOTATED;org.junit.Test;CONCRETE}
+Test-Cases: ${sort;${uniq;${testcases.junit3};${testcases.junit4}}}

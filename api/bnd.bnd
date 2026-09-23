@@ -1,8 +1,4 @@
-# Set javac settings from JDT prefs
--include: ${includes}/jdt.bnd, ${includes}/companion.bnd, ${includes}/core.bnd
-
-Export-Package: ${p}.*; -split-package:=first
-
--buildpath = \
-    ${osgi.annotation.buildpath}, \
-    org.osgi.framework;maven-scope=provided;version=1.8
+# Maven build: the bnd workspace includes were replaced by the
+# bnd-maven-plugin configuration in org.osgi.maven.pom.parent.
+# Package versions come from the @Version annotations in package-info.java.
+Export-Package: ${project.artifactId}.*; -split-package:=first

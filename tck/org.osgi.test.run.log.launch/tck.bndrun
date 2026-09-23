@@ -1,0 +1,41 @@
+# No java: — the test VM is the same as the build's. A fixed path would
+# only be valid on one machine; the minimum version a run requires is
+# recorded as jdk.run.minimum in the POM.
+-tester: biz.aQute.junit
+
+-runee: JavaSE-11
+
+-resolve.effective: active
+
+-runvm: ${def;argLine}, -Djava.security.manager=allow
+
+-runproperties: \
+	org.osgi.test.cases.log.launch.storageroot=target/org.osgi.test.cases.log.launch.testStorageRoot,\
+	org.osgi.test.cases.log.launch.bundles=
+
+-runframework: none
+
+
+# API overlays on the framework classpath (exports become system packages)
+-runpath: \
+	org.osgi.framework,\
+	org.osgi.resource,\
+	org.eclipse.osgi,\
+	assertj-core,\
+	net.bytebuddy.byte-buddy
+
+# This will help us keep -runbundles sorted
+-runstartlevel: \
+    order=sortbynameversion,\
+    begin=-1
+
+-runrequires: \
+	bnd.identity;id='org.osgi.test.cases.log.launch',\
+	bnd.identity;id='org.apache.felix.configadmin'
+
+# Test infrastructure for the junit-platform tester — mirrors the original
+# cnf/repo/osgi.tck.junit-platform lib that every TCK run carried
+
+
+# -runbundles is calculated by the bnd-resolver-maven-plugin during the run
+-runbundles:

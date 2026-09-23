@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.osgi</groupId>
+	<artifactId>org.osgi.service.log.reactor</artifactId>
+	<version>${revision}</version>
+	<packaging>pom</packaging>
+	<description>OSGi Log Service Specification</description>
+
+	<!-- The version lives in exactly one place: .mvn/maven.config
+	     (-Drevision=...). Maven picks that file up from the repo root for
+	     every build, and the release workflow matches the git tag against
+	     it. No revision property here — a second copy would just drift. -->
+	<parent>
+		<groupId>org.osgi</groupId>
+		<artifactId>org.osgi.maven.pom.parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<!-- The SNAPSHOT parent is deployed to Central snapshots, not Maven
+	     Central. The repositories declared in the parent cannot help to
+	     resolve the parent itself, but repositories declared here in the
+	     child are used for parent resolution — without this block a fresh
+	     clone cannot build. Remove once the parent is a Central release. -->
+	<repositories>
+		<repository>
+			<id>central-snapshots</id>
+			<name>Central Snapshots</name>
+			<url>https://central.sonatype.com/repository/maven-snapshots/</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+	<!-- Plugin and build-extension dependencies (e.g. the tck-bnd-plugins
+	     jar on the bnd-maven-plugin classpath) resolve via
+	     pluginRepositories, not repositories — same snapshot store. -->
+	<pluginRepositories>
+		<pluginRepository>
+			<id>central-snapshots</id>
+			<name>Central Snapshots</name>
+			<url>https://central.sonatype.com/repository/maven-snapshots/</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<modules>
+		<module>api</module>
+		<module>spec/org.osgi.spec.service.log</module>
+		<module>tck</module>
+	</modules>
+
+	<build>
+		<plugins>
+			<!-- Resolve ${revision} before install/deploy. The parent manages this
+			     plugin but does not activate it, so every installed pom kept the
+			     unresolved property in its parent reference: consuming a module
+			     from the repository — or publishing it — then fails. Declared
+			     here in the reactor, the modules inherit it. -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+</project>
