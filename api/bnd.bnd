@@ -1,0 +1,4 @@
+# Maven build: the bnd workspace includes were replaced by the
+# bnd-maven-plugin configuration in org.osgi.maven.pom.parent.
+# Package versions come from the @Version annotations in package-info.java.
+Export-Package: ${project.artifactId}.*; -split-package:=first

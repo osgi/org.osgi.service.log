@@ -1,0 +1,10 @@
+target/
+bin/
+bin_test/
+generated/
+.classpath
+.project
+.settings/
+
+# flatten-maven-plugin resolves ${revision} into this file at build time
+.flattened-pom.xml
