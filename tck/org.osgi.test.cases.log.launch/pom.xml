@@ -1,0 +1,144 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.osgi.tck</groupId>
+		<artifactId>org.osgi.tck.service.log</artifactId>
+		<version>${revision}</version>
+	</parent>
+	<groupId>org.osgi.tck</groupId>
+	<artifactId>org.osgi.test.cases.log.launch</artifactId>
+
+	<!--
+		Manage JUnit here on purpose: the parent POM sets the family to 5.12.2,
+		and with that version bnd's bundle engine no longer discovers any tests
+		in the run. The BOM pins Jupiter and Platform together to the versions
+		the original build used, transitive dependencies included.
+	-->
+	<dependencyManagement>
+		<dependencies>
+		<!--
+			Declared directly because the platform artifacts would otherwise
+			arrive transitively as 1.12.2, and bnd's bundle engine then finds
+			no tests; a direct declaration beats any transitive version.
+		-->
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-commons</artifactId>
+			<version>1.8.2</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-engine</artifactId>
+			<version>1.8.2</version>
+			<scope>compile</scope>
+		</dependency>
+			<dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>5.8.2</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<!-- The version the original used: the parent POM sets 3.24.2
+			     while the run's infrastructure list names 3.23.1 — without an
+			     explicit version the bundle imports [3.24,4) and finds nothing
+			     at run time. -->
+			<version>3.23.1</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<!--
+				Set the version explicitly: without it the module inherits
+				5.12.2 from the parent POM, and with that version bnd's bundle
+				engine no longer discovers any tests in the run.
+			-->
+			<version>5.8.2</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-params</artifactId>
+			<version>5.8.2</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi.tck</groupId>
+			<artifactId>org.osgi.test.support</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
+		<!-- In the original the global bnd buildpath supplies the org.osgi.test libraries -->
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.test.common</artifactId>
+			<version>1.2.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.test.junit5</artifactId>
+			<version>1.2.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.test.assertj.framework</artifactId>
+			<version>1.2.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.framework</artifactId>
+			<version>1.10.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.service.log</artifactId>
+			<version>${revision}</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>biz.aQute.bnd</groupId>
+				<artifactId>bnd-maven-plugin</artifactId>
+				<!-- Deliberately NOT ${bnd.version}: a -make recipe that embeds a
+				     jar built by another recipe makes 7.2.3 abort with
+				     "Already closed" — see docs/bnd-7.2.3-nested-make.md. -->
+				<version>${bnd.old.version}</version>
+				<configuration>
+					<!-- Select the bundle content through -privatepackage and
+					     Export-Package, as the workspace build does. Taking the
+					     whole classes directory would also put the test bundle
+					     classes into this bundle; the framework then sees two
+					     copies of a service interface and filters the services
+					     the test bundles register out of getServiceReferences. -->
+					<includeClassesDir>false</includeClassesDir>
+				</configuration>
+				<dependencies>
+					<!-- SignatureTest bnd plugin (from cnf/src of osgi/osgi) -->
+					<dependency>
+						<groupId>org.osgi.tck</groupId>
+						<artifactId>tck-bnd-plugins</artifactId>
+						<version>0.0.1-SNAPSHOT</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+		</plugins>
+	</build>
+</project>
