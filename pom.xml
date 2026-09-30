@@ -54,6 +54,10 @@
 		</pluginRepository>
 	</pluginRepositories>
 
+	<properties>
+		<osgi.scm.repository>osgi/org.osgi.service.log</osgi.scm.repository>
+	</properties>
+
 	<modules>
 		<module>api</module>
 		<module>spec/org.osgi.spec.service.log</module>
