@@ -50,10 +50,10 @@
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
 			<!-- The version the original used: the parent POM sets 3.24.2
-			     while the run's infrastructure list names 3.23.1 — without an
+			     while the run's infrastructure list names 3.27.7 — without an
 			     explicit version the bundle imports [3.24,4) and finds nothing
 			     at run time. -->
-			<version>3.23.1</version>
+			<version>3.27.7</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
