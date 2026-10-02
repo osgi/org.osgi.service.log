@@ -1,4 +1,5 @@
-# Managed by otterdog blueprint scorecard-integration.
+# Managed by otterdog blueprint scorecard-analysis. Do not edit here.
+# Scorecard logic lives in osgi/.github (reusable workflow).
 name: Scorecard analysis
 on:
   branch_protection_rule:
@@ -9,22 +10,7 @@ on:
 permissions: read-all
 jobs:
   analysis:
-    runs-on: ubuntu-latest
     permissions:
       security-events: write
       id-token: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - name: Run analysis
-        uses: ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc # v2.4.4
-        with:
-          results_file: results.sarif
-          results_format: sarif
-          publish_results: true
-      - name: Upload to code-scanning
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: results.sarif
+    uses: osgi/.github/.github/workflows/scorecard.yml@main
