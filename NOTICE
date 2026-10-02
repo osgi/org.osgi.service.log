@@ -27,7 +27,7 @@ SPDX-License-Identifier: Apache-2.0
 
 The project maintains the following source code repositories:
 
- * {{repo_url}}.git
+ * https://github.com/osgi/org.osgi.service.log.git
 
 ## Third-party Content
 
