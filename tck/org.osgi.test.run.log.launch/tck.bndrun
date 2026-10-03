@@ -18,24 +18,32 @@
 
 # API overlays on the framework classpath (exports become system packages)
 -runpath: \
-	org.osgi.framework,\
-	org.osgi.resource,\
-	org.eclipse.osgi,\
-	assertj-core,\
-	net.bytebuddy.byte-buddy
+	org.osgi.framework;version='${tck.range;${org.osgi.framework.version}}',\
+	org.osgi.resource;version='${tck.range;${org.osgi.resource.version}}',\
+	org.eclipse.osgi;version='${tck.range;${org.eclipse.osgi.version}}',\
+	assertj-core;version='${tck.range;${assertj.version}}',\
+	net.bytebuddy.byte-buddy;version='${tck.range;${byte-buddy.version}}'
 
 # This will help us keep -runbundles sorted
 -runstartlevel: \
     order=sortbynameversion,\
     begin=-1
 
+# Test runtime versions: the Maven properties of tck/pom.xml, as the OSGi
+# range [x.y.z,x.y.z+1). version_cleanup turns 1.4.0-SNAPSHOT into 1.4.0.SNAPSHOT.
+tck.range: ${range;[===,==+);${version_cleanup;${1}}}
+
 -runrequires: \
-	bnd.identity;id='org.osgi.test.cases.log.launch',\
-	bnd.identity;id='org.apache.felix.configadmin'
+	bnd.identity;id='org.osgi.test.cases.log.launch';version='${tck.range;${revision}}',\
+	bnd.identity;id='org.apache.felix.configadmin';version='${tck.range;${org.apache.felix.configadmin.version}}'
 
 # Test infrastructure for the junit-platform tester — mirrors the original
 # cnf/repo/osgi.tck.junit-platform lib that every TCK run carried
 
 
-# -runbundles is calculated by the bnd-resolver-maven-plugin during the run
--runbundles:
+# -runbundles is committed and verified by the build; after a dependency
+# change update it with: mvn bnd-resolver:resolve
+-runbundles: \
+	org.apache.felix.configadmin;version='${tck.range;${org.apache.felix.configadmin.version}}',\
+	org.apache.servicemix.bundles.junit;version='${tck.range;${servicemix-junit.version}}',\
+	org.osgi.test.cases.log.launch;version='${tck.range;${revision}}'
