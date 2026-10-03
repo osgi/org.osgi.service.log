@@ -10,35 +10,24 @@
 	<groupId>org.osgi.tck</groupId>
 	<artifactId>org.osgi.test.cases.log</artifactId>
 
-	<!--
-		Manage JUnit here on purpose: the parent POM sets the family to 5.12.2,
-		and with that version bnd's bundle engine no longer discovers any tests
-		in the run. The BOM pins Jupiter and Platform together to the versions
-		the original build used, transitive dependencies included.
-	-->
 	<dependencyManagement>
 		<dependencies>
-		<!--
-			Declared directly because the platform artifacts would otherwise
-			arrive transitively as 1.12.2, and bnd's bundle engine then finds
-			no tests; a direct declaration beats any transitive version.
-		-->
 		<dependency>
 			<groupId>org.junit.platform</groupId>
 			<artifactId>junit-platform-commons</artifactId>
-			<version>1.8.2</version>
+			<version>${junit-platform.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.platform</groupId>
 			<artifactId>junit-platform-engine</artifactId>
-			<version>1.8.2</version>
+			<version>${junit-platform.version}</version>
 			<scope>compile</scope>
 		</dependency>
 			<dependency>
 				<groupId>org.junit</groupId>
 				<artifactId>junit-bom</artifactId>
-				<version>5.8.2</version>
+				<version>${junit-jupiter.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -49,28 +38,19 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<!-- The version the original used: the parent POM sets 3.24.2
-			     while the run's infrastructure list names 3.23.1 — without an
-			     explicit version the bundle imports [3.24,4) and finds nothing
-			     at run time. -->
-			<version>3.23.1</version>
+			<version>${assertj.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-			<!--
-				Set the version explicitly: without it the module inherits
-				5.12.2 from the parent POM, and with that version bnd's bundle
-				engine no longer discovers any tests in the run.
-			-->
-			<version>5.8.2</version>
+			<version>${junit-jupiter.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-params</artifactId>
-			<version>5.8.2</version>
+			<version>${junit-jupiter.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -83,25 +63,25 @@
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.test.common</artifactId>
-			<version>1.2.0</version>
+			<version>${osgi-test.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.test.junit5</artifactId>
-			<version>1.2.0</version>
+			<version>${osgi-test.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.test.assertj.framework</artifactId>
-			<version>1.2.0</version>
+			<version>${osgi-test.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.framework</artifactId>
-			<version>1.10.0</version>
+			<version>${org.osgi.framework.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -113,7 +93,7 @@
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.namespace.service</artifactId>
-			<version>1.0.0</version>
+			<version>${org.osgi.namespace.service.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -125,7 +105,7 @@
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.resource</artifactId>
-			<version>1.0.1</version>
+			<version>${org.osgi.resource.version}</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
@@ -135,10 +115,6 @@
 			<plugin>
 				<groupId>biz.aQute.bnd</groupId>
 				<artifactId>bnd-maven-plugin</artifactId>
-				<!-- Deliberately NOT ${bnd.version}: a -make recipe that embeds a
-				     jar built by another recipe makes 7.2.3 abort with
-				     "Already closed" — see docs/bnd-7.2.3-nested-make.md. -->
-				<version>${bnd.old.version}</version>
 				<configuration>
 					<!-- Select the bundle content through -privatepackage and
 					     Export-Package, as the workspace build does. Taking the
