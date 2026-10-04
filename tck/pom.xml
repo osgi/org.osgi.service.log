@@ -14,7 +14,7 @@
 
 	<properties>
 		<assertj.version>3.27.7</assertj.version>
-		<awaitility.version>4.2.0</awaitility.version>
+		<awaitility.version>4.3.0</awaitility.version>
 		<byte-buddy.version>1.18.14</byte-buddy.version>
 		<hamcrest.version>2.2</hamcrest.version>
 		<junit-jupiter.version>5.12.2</junit-jupiter.version>
