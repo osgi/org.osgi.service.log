@@ -68,17 +68,6 @@
 			<scope>runtime</scope>
 		</dependency>
 		<!--
-			The classic tester used by the launch suites: they start the
-			framework themselves (-runframework none), so the tester lives on
-			the class path instead of being a bundle inside the framework.
-		-->
-		<dependency>
-			<groupId>biz.aQute.bnd</groupId>
-			<artifactId>biz.aQute.junit</artifactId>
-			<version>${bnd.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<!--
 			The test infrastructure, at the versions the original build used.
 			It is declared as a real dependency because the bnd resolver only
 			sees what is in the Maven tree — listing it in the bndrun alone is
@@ -127,30 +116,6 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.junit.vintage</groupId>
-			<artifactId>junit-vintage-engine</artifactId>
-			<version>${junit-jupiter.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.hamcrest</groupId>
-			<artifactId>hamcrest</artifactId>
-			<version>${hamcrest.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.awaitility</groupId>
-			<artifactId>awaitility</artifactId>
-			<version>${awaitility.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.servicemix.bundles</groupId>
-			<artifactId>org.apache.servicemix.bundles.junit</artifactId>
-			<version>${servicemix-junit.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.opentest4j</groupId>
 			<artifactId>opentest4j</artifactId>
 			<version>${opentest4j.version}</version>
@@ -175,48 +140,41 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.test.junit4</artifactId>
-			<version>${osgi-test.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<version>${mockito.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
 			<groupId>net.bytebuddy</groupId>
 			<artifactId>byte-buddy</artifactId>
 			<version>${byte-buddy.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>net.bytebuddy</groupId>
-			<artifactId>byte-buddy-agent</artifactId>
-			<version>${byte-buddy.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.objenesis</groupId>
-			<artifactId>objenesis</artifactId>
-			<version>${objenesis.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
+			<!--
+				The launch suite does not need a hosting OSGi framework: every test
+				starts its own framework from the class path. It runs as plain
+				JUnit 5 tests with Surefire, taken from the test cases jar, with
+				the same system properties the bndrun used to pass.
+			-->
 			<plugin>
-				<groupId>biz.aQute.bnd</groupId>
-				<artifactId>bnd-resolver-maven-plugin</artifactId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<dependenciesToScan>
+						<dependency>org.osgi.tck:org.osgi.test.cases.log.launch</dependency>
+					</dependenciesToScan>
+					<!-- LaunchTest builds the class loader of the launched framework
+					     from java.class.path, so the full class path must be there. -->
+					<useManifestOnlyJar>false</useManifestOnlyJar>
+					<useModulePath>false</useModulePath>
+					<argLine>-Djava.security.manager=allow</argLine>
+					<systemPropertyVariables>
+						<org.osgi.test.cases.log.launch.storageroot>${project.build.directory}/org.osgi.test.cases.log.launch.testStorageRoot</org.osgi.test.cases.log.launch.storageroot>
+						<org.osgi.test.cases.log.launch.bundles></org.osgi.test.cases.log.launch.bundles>
+					</systemPropertyVariables>
+					<reportsDirectory>${project.build.directory}/test-reports/tck</reportsDirectory>
+				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>biz.aQute.bnd</groupId>
-				<artifactId>bnd-testing-maven-plugin</artifactId>
-			</plugin>
-			<!-- Renders the bnd-testing JUnit XML into a readable HTML report:
+			<!-- Renders the JUnit XML into a readable HTML report:
 			     mvn surefire-report:report-only -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

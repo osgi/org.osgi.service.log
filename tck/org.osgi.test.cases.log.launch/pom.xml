@@ -53,12 +53,6 @@
 			<version>${junit-jupiter.version}</version>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.osgi.tck</groupId>
-			<artifactId>org.osgi.test.support</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-			<scope>compile</scope>
-		</dependency>
 		<!-- In the original the global bnd buildpath supplies the org.osgi.test libraries -->
 		<dependency>
 			<groupId>org.osgi</groupId>

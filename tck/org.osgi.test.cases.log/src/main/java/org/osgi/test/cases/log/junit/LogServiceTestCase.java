@@ -20,10 +20,13 @@
  */
 package org.osgi.test.cases.log.junit;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
@@ -34,6 +37,7 @@ public class LogServiceTestCase extends AbstractLogTestCase {
 	 * combinations of log entry arguments. All log levels must be effective.
 	 */
 	@SuppressWarnings("deprecation")
+	@Test
 	public void testLogServiceLogger() {
 		Collection<LogReader> readers = Collections.singletonList(reader);
 		logServiceThenAssertLog(true, readers, LogService.LOG_ERROR,
@@ -86,6 +90,7 @@ public class LogServiceTestCase extends AbstractLogTestCase {
 	 * must be effective.
 	 */
 	@SuppressWarnings("deprecation")
+	@Test
 	public void testMultipleListeners() {
 		LogReader reader1 = new LogReader();
 		LogReader reader2 = new LogReader();
@@ -124,7 +129,7 @@ public class LogServiceTestCase extends AbstractLogTestCase {
 				message, e, null);
 		logServiceThenAssertLog(true, onlyReader1, -12, message, e, null);
 
-		assertEquals(0, reader2.size());
+		assertThat(reader2.size()).isZero();
 
 		// Now we also removed reader2 so that we can check if
 		// the listeners re really removed
@@ -140,8 +145,8 @@ public class LogServiceTestCase extends AbstractLogTestCase {
 				message, e, null);
 		logServiceThenAssertLog(true, noReaders, -12, message, e, null);
 
-		assertEquals(0, reader1.size());
-		assertEquals(0, reader2.size());
+		assertThat(reader1.size()).isZero();
+		assertThat(reader2.size()).isZero();
 	}
 
 }

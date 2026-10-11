@@ -17,9 +17,12 @@
  *******************************************************************************/
 package org.osgi.test.cases.log.launch.junit;
 
+import static org.assertj.core.api.Assertions.fail;
+
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
@@ -40,8 +43,9 @@ public class LogLaunchTests extends LaunchTest {
 		return configuration;
 	}
 
+	@Test
 	public void testLogNoDefault() throws Exception {
-		Map<String,String> configuration = getConfiguration(getName());
+		Map<String,String> configuration = getConfiguration(testMethodName);
 		Framework framework = createFramework(configuration);
 		startFramework(framework);
 		Bundle tb1 = null;
@@ -50,8 +54,7 @@ public class LogLaunchTests extends LaunchTest {
 			tb1 = installBundle(framework, "/log.launch.tb1.jar");
 			tb1.start();
 		} catch (Exception e) {
-			fail("Test bundle indicates a failure, see exception cause for the error.",
-					e);
+			fail("Test bundle indicates a failure, see exception cause for the error.", e);
 		} finally {
 			if (tb1 != null) {
 				tb1.uninstall();
@@ -60,8 +63,9 @@ public class LogLaunchTests extends LaunchTest {
 		}
 	}
 
+	@Test
 	public void testLogSetDefault() throws Exception {
-		Map<String,String> configuration = getConfiguration(getName());
+		Map<String,String> configuration = getConfiguration(testMethodName);
 		configuration.put(LoggerContext.LOGGER_CONTEXT_DEFAULT_LOGLEVEL,
 				"INFO");
 		configuration.put("test.expected.log.level", "INFO");
@@ -75,8 +79,7 @@ public class LogLaunchTests extends LaunchTest {
 			tb1 = installBundle(framework, "/log.launch.tb1.jar");
 			tb1.start();
 		} catch (Exception e) {
-			fail("Test bundle indicates a failure, see exception cause for the error.",
-					e);
+			fail("Test bundle indicates a failure, see exception cause for the error.", e);
 		} finally {
 			if (tb1 != null) {
 				tb1.uninstall();
@@ -85,8 +88,9 @@ public class LogLaunchTests extends LaunchTest {
 		}
 	}
 
+	@Test
 	public void testLogSetOverride() throws Exception {
-		Map<String,String> configuration = getConfiguration(getName());
+		Map<String,String> configuration = getConfiguration(testMethodName);
 
 		configuration.put("test.set.log.level", "ERROR");
 
@@ -99,8 +103,7 @@ public class LogLaunchTests extends LaunchTest {
 			tb1 = installBundle(framework, "/log.launch.tb1.jar");
 			tb1.start();
 		} catch (Exception e) {
-			fail("Test bundle indicates a failure, see exception cause for the error.",
-					e);
+			fail("Test bundle indicates a failure, see exception cause for the error.", e);
 		} finally {
 			if (tb1 != null) {
 				tb1.uninstall();
