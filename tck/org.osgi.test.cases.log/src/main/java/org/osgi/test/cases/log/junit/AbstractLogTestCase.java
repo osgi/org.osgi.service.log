@@ -17,6 +17,12 @@
  *******************************************************************************/
 package org.osgi.test.cases.log.junit;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,7 +34,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInfo;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -41,9 +51,22 @@ import org.osgi.service.log.LogService;
 import org.osgi.service.log.Logger;
 import org.osgi.service.log.admin.LoggerAdmin;
 import org.osgi.service.log.admin.LoggerContext;
-import org.osgi.test.support.OSGiTestCase;
+import org.osgi.test.common.annotation.InjectAwaitCalm;
+import org.osgi.test.common.annotation.InjectBundleContext;
+import org.osgi.test.common.annotation.InjectBundleInstaller;
+import org.osgi.test.common.await.AwaitCalm;
+import org.osgi.test.common.await.AwaitCalmTimeoutException;
+import org.osgi.test.common.install.BundleInstaller;
 
-public abstract class AbstractLogTestCase extends OSGiTestCase {
+public abstract class AbstractLogTestCase {
+
+	@InjectBundleContext
+	BundleContext		context;
+
+	@InjectBundleInstaller
+	protected BundleInstaller	installer;
+
+	protected String			testMethodName;
 	static final Throwable				auditThrowable		= new Exception(
 			LogLevel.AUDIT.name());
 	static final Throwable				errorThrowable		= new Exception(
@@ -105,7 +128,13 @@ public abstract class AbstractLogTestCase extends OSGiTestCase {
 
 	long									loggerContextConfigTimeout;
 
-	protected void setUp() throws Exception {
+	@BeforeEach
+	void testMethodName(TestInfo testInfo) {
+		testMethodName = testInfo.getTestMethod().get().getName();
+	}
+
+	@BeforeEach
+	public void setUp() throws Exception {
 		loggerContextConfigTimeout = getLongProperty(
 				"org.osgi.test.cases.log.config_waiting_time", 200);
 		auditRegistration = registerLogLevel(LogLevel.AUDIT);
@@ -116,26 +145,26 @@ public abstract class AbstractLogTestCase extends OSGiTestCase {
 		traceRegistration = registerLogLevel(LogLevel.TRACE);
 		unknownRegistration = registerLogLevel(null);
 
-		logServiceReference = getContext().getServiceReference(
+		logServiceReference = context.getServiceReference(
 				LogService.class);
-		logService = getContext().getService(logServiceReference);
+		logService = context.getService(logServiceReference);
 		
-		logReaderServiceReference = getContext()
+		logReaderServiceReference = context
 				.getServiceReference(LogReaderService.class);
-		logReaderService = getContext()
+		logReaderService = context
 				.getService(logReaderServiceReference);
 		reader.clear();
 		logReaderService.addLogListener(reader);
 
-		loggerAdminReference = getContext()
+		loggerAdminReference = context
 				.getServiceReference(LoggerAdmin.class);
-		loggerAdmin = getContext().getService(loggerAdminReference);
+		loggerAdmin = context.getService(loggerAdminReference);
 
-		configAdminReference = getContext()
+		configAdminReference = context
 				.getServiceReference(ConfigurationAdmin.class);
-		configAdmin = getContext().getService(configAdminReference);
+		configAdmin = context.getService(configAdminReference);
 
-		Bundle b = getContext().getBundle();
+		Bundle b = context.getBundle();
 		// save off original log levels
 		rootContext = loggerAdmin.getLoggerContext(null);
 		rootLogLevels = rootContext.getLogLevels();
@@ -159,12 +188,13 @@ public abstract class AbstractLogTestCase extends OSGiTestCase {
 
 	private ServiceRegistration<String> registerLogLevel(LogLevel level) {
 		String levelName = level == null ? "UNKNOWN" : level.name();
-		return getContext().registerService(String.class, levelName,
+		return context.registerService(String.class, levelName,
 				new Hashtable<>(
 						Collections.singletonMap("level", levelName)));
 	}
 
-	protected void tearDown() throws Exception {
+	@AfterEach
+	public void tearDown() throws Exception {
 		auditRegistration.unregister();
 		errorRegistration.unregister();
 		warnRegistration.unregister();
@@ -186,10 +216,10 @@ public abstract class AbstractLogTestCase extends OSGiTestCase {
 			}
 		}
 
-		getContext().ungetService(logServiceReference);
-		getContext().ungetService(logReaderServiceReference);
-		getContext().ungetService(loggerAdminReference);
-		getContext().ungetService(configAdminReference);
+		context.ungetService(logServiceReference);
+		context.ungetService(logReaderServiceReference);
+		context.ungetService(loggerAdminReference);
+		context.ungetService(configAdminReference);
 
 		if (tb1 != null) {
 			try {
@@ -310,8 +340,7 @@ public abstract class AbstractLogTestCase extends OSGiTestCase {
 				break;
 			}
 		}
-		assertNotNull("The JVM is messed up, no stack trace element to test.",
-				expectedLocation);
+		assertThat(expectedLocation).as("The JVM is messed up, no stack trace element to test.").isNotNull();
 		return expectedLocation;
 	}
 
@@ -334,7 +363,7 @@ public abstract class AbstractLogTestCase extends OSGiTestCase {
 
 		String threadName = Thread.currentThread().getName();
 		String logName = LogService.class.getSimpleName() + "."
-				+ getContext().getBundle().getSymbolicName();
+				+ context.getBundle().getSymbolicName();
 		StackTraceElement expectedLocation = null;
 		for (StackTraceElement element : Thread.currentThread()
 				.getStackTrace()) {
@@ -344,10 +373,9 @@ public abstract class AbstractLogTestCase extends OSGiTestCase {
 				break;
 			}
 		}
-		assertNotNull("The JVM is messed up, no stack trace element to test.",
-				expectedLocation);
+		assertThat(expectedLocation).as("The JVM is messed up, no stack trace element to test.").isNotNull();
 
-		assertLog(expectEntry, listeners, logName, getContext().getBundle(),
+		assertLog(expectEntry, listeners, logName, context.getBundle(),
 				level, message, t, s, time, threadName, expectedLocation);
 	}
 
@@ -363,39 +391,30 @@ public abstract class AbstractLogTestCase extends OSGiTestCase {
 		long previousSequence = logSequence.get();
 		for (LogReader logReader : listeners) {
 			LogEntry entry = logReader.getEntry(10000, message, level);
-			assertEquals(b, entry.getBundle());
-			assertEquals(s, entry.getServiceReference());
-			assertEquals(t, entry.getException());
-			assertEquals(level, entry.getLevel());
-			assertEquals(message, entry.getMessage());
-			assertTrue("Unexpected time: " + entry.getTime(),
-					entry.getTime() >= time);
-			assertTrue("Unexpected time: " + entry.getTime(),
-					entry.getTime() <= System.currentTimeMillis());
-			assertTrue("Unexpected sequence",
-					previousSequence < entry.getSequence());
-			assertEquals("Wrong logLevel", LogReader.getLogLevel(level),
-					entry.getLogLevel());
-			assertTrue("Wrong log name", logName.equals(entry.getLoggerName()));
+			assertThat(entry.getBundle()).isEqualTo(b);
+			assertThat(entry.getServiceReference()).isEqualTo(s);
+			assertThat(entry.getException()).isEqualTo(t);
+			assertThat(entry.getLevel()).isEqualTo(level);
+			assertThat(entry.getMessage()).isEqualTo(message);
+			assertThat(entry.getTime() >= time).as("Unexpected time: " + entry.getTime()).isTrue();
+			assertThat(entry.getTime() <= System.currentTimeMillis()).as("Unexpected time: " + entry.getTime()).isTrue();
+			assertThat(previousSequence < entry.getSequence()).as("Unexpected sequence").isTrue();
+			assertThat(entry.getLogLevel()).as("Wrong logLevel").isEqualTo(LogReader.getLogLevel(level));
+			assertThat(logName).as("Wrong log name").isEqualTo(entry.getLoggerName());
 			if (threadName != null) {
-				assertTrue("Unexpected thread info: " + entry.getThreadInfo(),
-						entry.getThreadInfo().indexOf(threadName) >= 0);
+				assertThat(entry.getThreadInfo().indexOf(threadName) >= 0).as("Unexpected thread info: " + entry.getThreadInfo()).isTrue();
 			}
 			if (expectedLocation != null) {
 				StackTraceElement actualLocation = entry.getLocation();
-				assertEquals("Wrong location method: ",
-						expectedLocation.getMethodName(),
-						actualLocation.getMethodName());
-				assertEquals("Wrong location method: ",
-						expectedLocation.getClassName(),
-						actualLocation.getClassName());
+				assertThat(actualLocation.getMethodName()).as("Wrong location method: ").isEqualTo(expectedLocation.getMethodName());
+				assertThat(actualLocation.getClassName()).as("Wrong location method: ").isEqualTo(expectedLocation.getClassName());
 			}
 			logSequence.set(entry.getSequence());
 		}
 	}
 
 	private void forceEntryLog(Collection<LogReader> listeners) {
-		loggerThenAssertLog(true, getContext().getBundle(),
+		loggerThenAssertLog(true, context.getBundle(),
 				logService.getLogger(FORCE_LOGGER_NAME), listeners,
 				LogLevel.AUDIT,
 				forceMessage, forceMessage, null, null);
@@ -470,6 +489,41 @@ public abstract class AbstractLogTestCase extends OSGiTestCase {
 				return traceRegistration.getReference();
 			default :
 				return unknownRegistration.getReference();
+		}
+	}
+	public long getLongProperty(String key, long defaultValue) {
+		String propValue = AccessController.doPrivileged(
+				(PrivilegedAction<String>) () -> context.getProperty(key));
+		if (propValue == null) {
+			return defaultValue;
+		}
+		try {
+			return Long.parseLong(propValue);
+		} catch (NumberFormatException e) {
+			return defaultValue;
+		}
+	}
+
+	static final long	SETTLE_QUIET_MILLIS	= 300;
+
+	@InjectAwaitCalm
+	protected AwaitCalm	awaitCalm;
+
+	/**
+	 * Waits for the framework to settle instead of sleeping a fixed time:
+	 * returns once no bundle or service event has arrived for
+	 * SETTLE_QUIET_MILLIS, and at the latest after maxMillis, as the former
+	 * sleep did.
+	 */
+	public void settle(long maxMillis) {
+		Duration quiet = Duration.ofMillis(Math.min(SETTLE_QUIET_MILLIS, Math.max(1, maxMillis / 2)));
+		try {
+			awaitCalm.waitForQuiet(quiet, Duration.ofMillis(maxMillis));
+		} catch (AwaitCalmTimeoutException e) {
+			// still busy after maxMillis: go on, as the fixed sleep did
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			fail("Unexpected interruption.", e);
 		}
 	}
 }

@@ -38,19 +38,11 @@ tck.range: ${range;[===,==+);${version_cleanup;${1}}}
 	bnd.identity;id='junit-platform-commons';version='${tck.range;${junit-platform.version}}',\
 	bnd.identity;id='junit-platform-engine';version='${tck.range;${junit-platform.version}}',\
 	bnd.identity;id='junit-platform-launcher';version='${tck.range;${junit-platform.version}}',\
-	bnd.identity;id='junit-vintage-engine';version='${tck.range;${junit-jupiter.version}}',\
-	bnd.identity;id='org.hamcrest';version='${tck.range;${hamcrest.version}}',\
-	bnd.identity;id='org.awaitility';version='${tck.range;${awaitility.version}}',\
-	bnd.identity;id='org.apache.servicemix.bundles.junit';version='${tck.range;${servicemix-junit.version}}',\
 	bnd.identity;id='org.opentest4j';version='${tck.range;${opentest4j.version}}',\
 	bnd.identity;id='org.osgi.test.common';version='${tck.range;${osgi-test.version}}',\
 	bnd.identity;id='org.osgi.test.assertj.framework';version='${tck.range;${osgi-test.version}}',\
 	bnd.identity;id='org.osgi.test.junit5';version='${tck.range;${osgi-test.version}}',\
-	bnd.identity;id='org.osgi.test.junit4';version='${tck.range;${osgi-test.version}}',\
-	bnd.identity;id='org.mockito.mockito-core';version='${tck.range;${mockito.version}}',\
-	bnd.identity;id='net.bytebuddy.byte-buddy';version='${tck.range;${byte-buddy.version}}',\
-	bnd.identity;id='net.bytebuddy.byte-buddy-agent';version='${tck.range;${byte-buddy.version}}',\
-	bnd.identity;id='org.objenesis';version='${tck.range;${objenesis.version}}'
+	bnd.identity;id='net.bytebuddy.byte-buddy';version='${tck.range;${byte-buddy.version}}'
 
 # -runbundles is committed and verified by the build; after a dependency
 # change update it with: mvn bnd-resolver:resolve
@@ -62,18 +54,10 @@ tck.range: ${range;[===,==+);${version_cleanup;${1}}}
 	junit-platform-commons;version='${tck.range;${junit-platform.version}}',\
 	junit-platform-engine;version='${tck.range;${junit-platform.version}}',\
 	junit-platform-launcher;version='${tck.range;${junit-platform.version}}',\
-	junit-vintage-engine;version='${tck.range;${junit-jupiter.version}}',\
 	net.bytebuddy.byte-buddy;version='${tck.range;${byte-buddy.version}}',\
-	net.bytebuddy.byte-buddy-agent;version='${tck.range;${byte-buddy.version}}',\
 	org.apache.felix.configadmin;version='${tck.range;${org.apache.felix.configadmin.version}}',\
-	org.apache.servicemix.bundles.junit;version='${tck.range;${servicemix-junit.version}}',\
-	org.awaitility;version='${tck.range;${awaitility.version}}',\
-	org.hamcrest;version='${tck.range;${hamcrest.version}}',\
-	org.mockito.mockito-core;version='${tck.range;${mockito.version}}',\
-	org.objenesis;version='${tck.range;${objenesis.version}}',\
 	org.opentest4j;version='${tck.range;${opentest4j.version}}',\
 	org.osgi.test.assertj.framework;version='${tck.range;${osgi-test.version}}',\
 	org.osgi.test.cases.log;version='${tck.range;${revision}}',\
 	org.osgi.test.common;version='${tck.range;${osgi-test.version}}',\
-	org.osgi.test.junit4;version='${tck.range;${osgi-test.version}}',\
 	org.osgi.test.junit5;version='${tck.range;${osgi-test.version}}'

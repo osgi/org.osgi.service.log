@@ -17,6 +17,10 @@
  *******************************************************************************/
 package org.osgi.test.cases.log.junit;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.fail;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Filter;
@@ -62,24 +67,26 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 	static final String	PID_PREFIX_LOG_ADMIN	= "org.osgi.service.log.admin";
 
 
+	@Test
 	public void testServiceReferenceIsLoggerFactory()
 			throws InvalidSyntaxException {
-		Filter loggerFactoryFilter = getContext().createFilter(
+		Filter loggerFactoryFilter = context.createFilter(
 				"(objectClass=" + LoggerFactory.class.getName() + ")");
-		assertTrue(
-				"LogService registration is not also a LogFactory registration.",
-				loggerFactoryFilter.match(logServiceReference));
+		assertThat(loggerFactoryFilter.match(logServiceReference)).as("LogService registration is not also a LogFactory registration.").isTrue();
 	}
 
+	@Test
 	public void testLogServiceImplProvidesOsgiServiceCapability() {
 		doTestForCapability(logServiceReference, LogService.class,
 				LoggerFactory.class);
 	}
 
+	@Test
 	public void testLogReaderServiceImplProvidesOsgiServiceCapability() {
 		doTestForCapability(logReaderServiceReference, LogReaderService.class);
 	}
 
+	@Test
 	public void testLoggerAdminImplProvidesOsgiServiceCapability() {
 		doTestForCapability(loggerAdminReference, LoggerAdmin.class);
 	}
@@ -94,7 +101,7 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 				.adapt(BundleRevision.class);
 		List<BundleCapability> serviceCaps = serviceRevision
 				.getDeclaredCapabilities(ServiceNamespace.SERVICE_NAMESPACE);
-		assertFalse("No service capabilities found.", serviceCaps.isEmpty());
+		assertThat(serviceCaps).as("No service capabilities found.").isNotEmpty();
 		// search for one that provides the service classes
 		for (BundleCapability serviceCap : serviceCaps) {
 			@SuppressWarnings("unchecked")
@@ -104,8 +111,7 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 			if (containsAllServiceClasses(objectClasses, serviceClasses)) {
 				String usesDirective = serviceCap.getDirectives()
 						.get(Namespace.CAPABILITY_USES_DIRECTIVE);
-				assertNotNull("No uses directive for: " + serviceCap,
-						usesDirective);
+				assertThat(usesDirective).as("No uses directive for: " + serviceCap).isNotNull();
 				Set<String> usesSet = new HashSet<>();
 				for (String uses : usesDirective.split(",")) {
 					usesSet.add(uses.trim());
@@ -137,26 +143,28 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 	 * types with all combinations of log entry arguments. All log levels must
 	 * be effective.
 	 */
+	@Test
 	public void testLogger() {
 		Collection<LogReader> readers = Collections.singletonList(reader);
-		Bundle b = getContext().getBundle();
+		Bundle b = context.getBundle();
 
 		Logger logger = logService.getLogger(TEST_LOGGER_NAME);
-		assertEquals("Wrong logger name.", TEST_LOGGER_NAME, logger.getName());
+		assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(TEST_LOGGER_NAME);
 		doLoggerLogging(LogLevel.TRACE, b, logger, readers);
 
 		logger = logService.getLogger(b, TEST_LOGGER_NAME, Logger.class);
-		assertEquals("Wrong logger name.", TEST_LOGGER_NAME, logger.getName());
+		assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(TEST_LOGGER_NAME);
 		doLoggerLogging(LogLevel.TRACE, b, logger, readers);
 
 		logger = logService.getLogger(TEST_LOGGER_NAME, FormatterLogger.class);
-		assertEquals("Wrong logger name.", TEST_LOGGER_NAME, logger.getName());
+		assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(TEST_LOGGER_NAME);
 		doLoggerLogging(LogLevel.TRACE, b, logger, readers);
 	}
 
+	@Test
 	public void testLoggerWithConsumer() throws Exception {
 		final AtomicReference<Logger> consumerAccepted = new AtomicReference<>();
-		Bundle b = getContext().getBundle();
+		Bundle b = context.getBundle();
 		LoggerContext loggerContext = loggerAdmin.getLoggerContext(null);
 		LoggerConsumer<RuntimeException> consumer = new LoggerConsumer<RuntimeException>() {
 			@Override
@@ -166,24 +174,24 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 		};
 		for (LogLevel level : EnumSet
 				.complementOf(EnumSet.of(LogLevel.AUDIT))) {
-			String loggerName = getName();
+			String loggerName = testMethodName;
 			loggerContext
 					.setLogLevels(Collections.singletonMap(loggerName, level));
-			loggerName = getName() + ".simple";
+			loggerName = testMethodName + ".simple";
 			Logger logger = logService.getLogger(loggerName);
-			assertEquals("Wrong logger name.", loggerName, logger.getName());
+			assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(loggerName);
 			doLoggerLoggingWithConsumer(logger, consumer, consumerAccepted,
 					level, null);
 
-			loggerName = getName() + ".bundle";
+			loggerName = testMethodName + ".bundle";
 			logger = logService.getLogger(b, loggerName, Logger.class);
-			assertEquals("Wrong logger name.", loggerName, logger.getName());
+			assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(loggerName);
 			doLoggerLoggingWithConsumer(logger, consumer, consumerAccepted,
 					level, null);
 
-			loggerName = getName() + ".formatter";
+			loggerName = testMethodName + ".formatter";
 			logger = logService.getLogger(loggerName, FormatterLogger.class);
-			assertEquals("Wrong logger name.", loggerName, logger.getName());
+			assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(loggerName);
 			doLoggerLoggingWithConsumer(logger, consumer, consumerAccepted,
 					level, null);
 		}
@@ -191,9 +199,10 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 
 	final Exception consumerException = new Exception("Consumer");
 
+	@Test
 	public void testLoggerWithConsumerException() throws Exception {
 		final AtomicReference<Logger> consumerAccepted = new AtomicReference<>();
-		Bundle b = getContext().getBundle();
+		Bundle b = context.getBundle();
 		LoggerContext loggerContext = loggerAdmin.getLoggerContext(null);
 		LoggerConsumer<Exception> consumer = new LoggerConsumer<Exception>() {
 			@Override
@@ -204,24 +213,24 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 		};
 		for (LogLevel level : EnumSet
 				.complementOf(EnumSet.of(LogLevel.AUDIT))) {
-			String loggerName = getName();
+			String loggerName = testMethodName;
 			loggerContext
 					.setLogLevels(Collections.singletonMap(loggerName, level));
-			loggerName = getName() + ".simple";
+			loggerName = testMethodName + ".simple";
 			Logger logger = logService.getLogger(loggerName);
-			assertEquals("Wrong logger name.", loggerName, logger.getName());
+			assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(loggerName);
 			doLoggerLoggingWithConsumer(logger, consumer, consumerAccepted,
 					level, consumerException);
 
-			loggerName = getName() + ".bundle";
+			loggerName = testMethodName + ".bundle";
 			logger = logService.getLogger(b, loggerName, Logger.class);
-			assertEquals("Wrong logger name.", loggerName, logger.getName());
+			assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(loggerName);
 			doLoggerLoggingWithConsumer(logger, consumer, consumerAccepted,
 					level, consumerException);
 
-			loggerName = getName() + ".formatter";
+			loggerName = testMethodName + ".formatter";
 			logger = logService.getLogger(loggerName, FormatterLogger.class);
-			assertEquals("Wrong logger name.", loggerName, logger.getName());
+			assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(loggerName);
 			doLoggerLoggingWithConsumer(logger, consumer, consumerAccepted,
 					level, consumerException);
 		}
@@ -272,20 +281,19 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 		}
 
 		if (effectiveLevel.implies(level)) {
-			assertSame("Consumer did not accept logger.",
-					consumerAccepted.get(), logger);
-			assertSame("Wrong exception from Consumer", t, exception);
+			assertThat(logger).as("Consumer did not accept logger.").isSameAs(consumerAccepted.get());
+			assertThat(exception).as("Wrong exception from Consumer").isSameAs(t);
 		} else {
-			assertNull("Consumer wrongly accepted logger.",
-					consumerAccepted.get());
-			assertNull("Wrong exception from Consumer", t);
+			assertThat(consumerAccepted.get()).as("Consumer wrongly accepted logger.").isNull();
+			assertThat(t).as("Wrong exception from Consumer").isNull();
 		}
 	}
 
+	@Test
 	public void testLoggerForBundle() throws BundleException, IOException {
 		Collection<LogReader> readers = Collections.singletonList(reader);
 		// prevent all resolution
-		ServiceRegistration<ResolverHookFactory> preventResolution = getContext()
+		ServiceRegistration<ResolverHookFactory> preventResolution = context
 				.registerService(ResolverHookFactory.class,
 						new ResolverHookFactory() {
 
@@ -324,13 +332,9 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 							}
 						}, null);
 		try {
-			tb1 = install("tb1.jar");
-			try {
-				logService.getLogger(tb1, TEST_LOGGER_NAME, Logger.class);
-				fail("Expecting an IllegalStateException for unresolved bundle");
-			} catch (IllegalArgumentException e) {
-				// expected
-			}
+			tb1 = installer.installBundle("tb1.jar", false);
+			assertThatExceptionOfType(IllegalArgumentException.class).as("Expecting an IllegalStateException for unresolved bundle")
+					.isThrownBy(() -> logService.getLogger(tb1, TEST_LOGGER_NAME, Logger.class));
 
 			// allow resolution
 			preventResolution.unregister();
@@ -340,23 +344,17 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 
 			Logger logger = logService.getLogger(tb1, TEST_LOGGER_NAME,
 				Logger.class);
-			assertEquals("Wrong logger name.", TEST_LOGGER_NAME,
-					logger.getName());
+			assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(TEST_LOGGER_NAME);
 			doLoggerLogging(LogLevel.TRACE, tb1, logger, readers);
 
 			logger = logService.getLogger(tb1, TEST_LOGGER_NAME,
 					FormatterLogger.class);
-			assertEquals("Wrong logger name.", TEST_LOGGER_NAME,
-					logger.getName());
+			assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(TEST_LOGGER_NAME);
 			doLoggerLogging(LogLevel.TRACE, tb1, logger, readers);
 
 			tb1.uninstall();
-			try {
-				logService.getLogger(tb1, TEST_LOGGER_NAME, Logger.class);
-				fail("Expecting an IllegalStateException for uninstalled bundle");
-			} catch (IllegalArgumentException e) {
-				// expected
-			}
+			assertThatExceptionOfType(IllegalArgumentException.class).as("Expecting an IllegalStateException for uninstalled bundle")
+					.isThrownBy(() -> logService.getLogger(tb1, TEST_LOGGER_NAME, Logger.class));
 
 			// expect existing logger to keep working
 			doLoggerLogging(LogLevel.TRACE, tb1, logger, readers);
@@ -391,45 +389,45 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 	 * types with all combinations of log entry arguments. All log levels must
 	 * be effective.
 	 */
+	@Test
 	public void testLoggerSLF4JFormat() {
 		Collection<LogReader> readers = Collections.singletonList(reader);
-		Bundle b = getContext().getBundle();
+		Bundle b = context.getBundle();
 		Logger logger = logService.getLogger(TEST_LOGGER_NAME);
-		assertEquals("Wrong logger name.", TEST_LOGGER_NAME, logger.getName());
+		assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(TEST_LOGGER_NAME);
 		doLoggerSlf4jFormat(LogLevel.TRACE, b, logger, readers);
 
 		logger = logService.getLogger(getClass());
-		assertEquals("Wrong logger name.", getClass().getName(),
-				logger.getName());
+		assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(getClass().getName());
 		doLoggerSlf4jFormat(LogLevel.TRACE, b, logger, readers);
 
 		logger = logService.getLogger(TEST_LOGGER_NAME, Logger.class);
-		assertEquals("Wrong logger name.", TEST_LOGGER_NAME, logger.getName());
+		assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(TEST_LOGGER_NAME);
 		doLoggerSlf4jFormat(LogLevel.TRACE, b, logger, readers);
 
 		logger = logService.getLogger(getClass(), Logger.class);
-		assertEquals("Wrong logger name.", getClass().getName(),
-				logger.getName());
+		assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(getClass().getName());
 		doLoggerSlf4jFormat(LogLevel.TRACE, b, logger, readers);
 	}
 
+	@Test
 	public void testLoggerPrintfFormat() {
 		Collection<LogReader> readers = Collections.singletonList(reader);
-		Bundle b = getContext().getBundle();
+		Bundle b = context.getBundle();
 		Logger logger = logService.getLogger(TEST_LOGGER_NAME,
 				FormatterLogger.class);
-		assertEquals("Wrong logger name.", TEST_LOGGER_NAME, logger.getName());
+		assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(TEST_LOGGER_NAME);
 		doLoggerPrintfFormat(LogLevel.TRACE, b, logger, readers);
 
 		logger = logService.getLogger(getClass(), FormatterLogger.class);
-		assertEquals("Wrong logger name.", getClass().getName(),
-				logger.getName());
+		assertThat(logger.getName()).as("Wrong logger name.").isEqualTo(getClass().getName());
 		doLoggerPrintfFormat(LogLevel.TRACE, b, logger, readers);
 	}
 
+	@Test
 	public void testLogAdminRootContextRootNameEffectiveLogLevel() {
 		Collection<LogReader> readers = Collections.singletonList(reader);
-		Bundle b = getContext().getBundle();
+		Bundle b = context.getBundle();
 		Logger logger = logService.getLogger(TEST_LOGGER_NAME);
 
 		doTestRootContextRootNameEffectiveLogLevel(null, b, logger, readers);
@@ -459,34 +457,28 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 					Collections.singletonMap(Logger.ROOT_LOGGER_NAME, level));
 		}
 
-		assertEquals("Wrong effective level.", level,
-				rootContext.getEffectiveLogLevel(TEST_LOGGER_NAME));
-		assertEquals("Wrong effective level.", level,
-				rootContext.getEffectiveLogLevel(getClass().getName()));
-		assertEquals("Wrong effective level.", level,
-				bsnContext.getEffectiveLogLevel(TEST_LOGGER_NAME));
-		assertEquals("Wrong effective level.", level,
-				bsnContext.getEffectiveLogLevel(getClass().getName()));
-		assertEquals("Wrong effective level.", level,
-				bsnVersionContext.getEffectiveLogLevel(TEST_LOGGER_NAME));
-		assertEquals("Wrong effective level.", level,
-				bsnVersionContext.getEffectiveLogLevel(getClass().getName()));
-		assertEquals("Wrong effective level.", level, bsnVersionLocationContext
-				.getEffectiveLogLevel(TEST_LOGGER_NAME));
-		assertEquals("Wrong effective level.", level, bsnVersionLocationContext
-				.getEffectiveLogLevel(getClass().getName()));
+		assertThat(rootContext.getEffectiveLogLevel(TEST_LOGGER_NAME)).as("Wrong effective level.").isEqualTo(level);
+		assertThat(rootContext.getEffectiveLogLevel(getClass().getName())).as("Wrong effective level.").isEqualTo(level);
+		assertThat(bsnContext.getEffectiveLogLevel(TEST_LOGGER_NAME)).as("Wrong effective level.").isEqualTo(level);
+		assertThat(bsnContext.getEffectiveLogLevel(getClass().getName())).as("Wrong effective level.").isEqualTo(level);
+		assertThat(bsnVersionContext.getEffectiveLogLevel(TEST_LOGGER_NAME)).as("Wrong effective level.").isEqualTo(level);
+		assertThat(bsnVersionContext.getEffectiveLogLevel(getClass().getName())).as("Wrong effective level.").isEqualTo(level);
+		assertThat(bsnVersionLocationContext
+				.getEffectiveLogLevel(TEST_LOGGER_NAME)).as("Wrong effective level.").isEqualTo(level);
+		assertThat(bsnVersionLocationContext
+				.getEffectiveLogLevel(getClass().getName())).as("Wrong effective level.").isEqualTo(level);
 
 		switch (level) {
 			case TRACE :
-				assertTrue("Trace should be enabled.", logger.isTraceEnabled());
+				assertThat(logger.isTraceEnabled()).as("Trace should be enabled.").isTrue();
 			case DEBUG :
-				assertTrue("Debug should be enabled.", logger.isDebugEnabled());
+				assertThat(logger.isDebugEnabled()).as("Debug should be enabled.").isTrue();
 			case INFO :
-				assertTrue("Info should be enabled.", logger.isInfoEnabled());
+				assertThat(logger.isInfoEnabled()).as("Info should be enabled.").isTrue();
 			case WARN :
-				assertTrue("Warn should be enabled.", logger.isWarnEnabled());
+				assertThat(logger.isWarnEnabled()).as("Warn should be enabled.").isTrue();
 			case ERROR :
-				assertTrue("Error should be enabled.", logger.isErrorEnabled());
+				assertThat(logger.isErrorEnabled()).as("Error should be enabled.").isTrue();
 			case AUDIT :
 			default :
 				break;
@@ -494,6 +486,7 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 		doLoggerLogging(level, b, logger, readers);
 	}
 
+	@Test
 	public void testLogAdminBsnContextRootNameEffectiveLogLevel() {
 		Collection<LoggerContext> auditContexts = Arrays.asList(rootContext,
 				bsnVersionContext, bsnVersionLocationContext);
@@ -501,6 +494,7 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 				auditContexts);
 	}
 
+	@Test
 	public void testLogAdminBsnVersionContextRootNameEffectiveLogLevel() {
 		Collection<LoggerContext> auditContexts = Arrays.asList(rootContext,
 				bsnContext, bsnVersionLocationContext);
@@ -508,6 +502,7 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 				auditContexts);
 	}
 
+	@Test
 	public void testLogAdminBsnVersionLocationContextRootNameEffectiveLogLevel() {
 		Collection<LoggerContext> auditContexts = Arrays.asList(rootContext,
 				bsnContext, bsnVersionContext);
@@ -522,7 +517,7 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 		rootContext.setLogLevels(Collections
 				.singletonMap(Logger.ROOT_LOGGER_NAME, LogLevel.AUDIT));
 		Collection<LogReader> readers = Collections.singletonList(reader);
-		Bundle b = getContext().getBundle();
+		Bundle b = context.getBundle();
 		Logger logger = logService.getLogger(TEST_LOGGER_NAME);
 
 		doTestSpecificContextRootNameEffectiveLogLevel(null, b, logger, readers,
@@ -558,30 +553,26 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 		}
 
 		// only the managedContext is effected by the change
-		assertEquals("Wrong effective level.", level,
-				managedContext.getEffectiveLogLevel(TEST_LOGGER_NAME));
-		assertEquals("Wrong effective level.", level,
-				managedContext.getEffectiveLogLevel(getClass().getName()));
+		assertThat(managedContext.getEffectiveLogLevel(TEST_LOGGER_NAME)).as("Wrong effective level.").isEqualTo(level);
+		assertThat(managedContext.getEffectiveLogLevel(getClass().getName())).as("Wrong effective level.").isEqualTo(level);
 
 		// the other contexts remain AUDIT
 		for (LoggerContext auditContext : auditContexts) {
-			assertEquals("Wrong effective level.", LogLevel.AUDIT,
-					auditContext.getEffectiveLogLevel(TEST_LOGGER_NAME));
-			assertEquals("Wrong effective level.", LogLevel.AUDIT,
-					auditContext.getEffectiveLogLevel(getClass().getName()));
+			assertThat(auditContext.getEffectiveLogLevel(TEST_LOGGER_NAME)).as("Wrong effective level.").isEqualTo(LogLevel.AUDIT);
+			assertThat(auditContext.getEffectiveLogLevel(getClass().getName())).as("Wrong effective level.").isEqualTo(LogLevel.AUDIT);
 		}
 
 		switch (level) {
 			case TRACE :
-				assertTrue("Trace should be enabled.", logger.isTraceEnabled());
+				assertThat(logger.isTraceEnabled()).as("Trace should be enabled.").isTrue();
 			case DEBUG :
-				assertTrue("Debug should be enabled.", logger.isDebugEnabled());
+				assertThat(logger.isDebugEnabled()).as("Debug should be enabled.").isTrue();
 			case INFO :
-				assertTrue("Info should be enabled.", logger.isInfoEnabled());
+				assertThat(logger.isInfoEnabled()).as("Info should be enabled.").isTrue();
 			case WARN :
-				assertTrue("Warn should be enabled.", logger.isWarnEnabled());
+				assertThat(logger.isWarnEnabled()).as("Warn should be enabled.").isTrue();
 			case ERROR :
-				assertTrue("Error should be enabled.", logger.isErrorEnabled());
+				assertThat(logger.isErrorEnabled()).as("Error should be enabled.").isTrue();
 			case AUDIT :
 			default :
 				break;
@@ -602,18 +593,22 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 		testConfigLogLevels = Collections.unmodifiableMap(temp);
 	}
 
+	@Test
 	public void testRootLoggerConfig() throws IOException {
 		doTestConfigLoggerContext(null);
 	}
 
+	@Test
 	public void testBsnLoggerConfig() throws IOException {
 		doTestConfigLoggerContext(bsnContext.getName());
 	}
 
+	@Test
 	public void testBsnVersionLoggerConfig() throws IOException {
 		doTestConfigLoggerContext(bsnVersionContext.getName());
 	}
 
+	@Test
 	public void testBsnVersionLocationLoggerConfig() throws IOException {
 		doTestConfigLoggerContext(bsnVersionLocationContext.getName());
 	}
@@ -633,36 +628,28 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 		Dictionary<String,String> logLevelConfigs = getLogLevelConfigs(
 				logLevels);
 		contextConfig.update(logLevelConfigs);
-		sleep(loggerContextConfigTimeout);
+		settle(loggerContextConfigTimeout);
 		LoggerContext loggerContext = loggerAdmin
 				.getLoggerContext(loggerContextName);
-		assertEquals(
-				"Unexpected loglevels for context named: " + loggerContextName,
-				logLevels, loggerContext.getLogLevels());
+		assertThat(loggerContext.getLogLevels()).as("Unexpected loglevels for context named: " + loggerContextName).isEqualTo(logLevels);
 
 		// delete some arbitrary key in the config and update it
 		logLevels.remove(logLevels.keySet().iterator().next());
 		logLevelConfigs = getLogLevelConfigs(logLevels);
 		contextConfig.update(logLevelConfigs);
-		sleep(loggerContextConfigTimeout);
-		assertEquals(
-				"Unexpected loglevels for context named: " + loggerContextName,
-				logLevels, loggerContext.getLogLevels());
+		settle(loggerContextConfigTimeout);
+		assertThat(loggerContext.getLogLevels()).as("Unexpected loglevels for context named: " + loggerContextName).isEqualTo(logLevels);
 
 		// Now change with LoggerAdmin API
 		Map<String,LogLevel> changeWithAPI = loggerContext.getLogLevels();
 		changeWithAPI.put("added.with.api", LogLevel.TRACE);
 		loggerContext.setLogLevels(changeWithAPI);
-		assertEquals(
-				"Unexpected loglevels for context named: " + loggerContextName,
-				changeWithAPI, loggerContext.getLogLevels());
+		assertThat(loggerContext.getLogLevels()).as("Unexpected loglevels for context named: " + loggerContextName).isEqualTo(changeWithAPI);
 
 		// Now delete with config admin which should make the log levels empty
 		contextConfig.delete();
-		sleep(loggerContextConfigTimeout);
-		assertEquals(
-				"Unexpected loglevels for context named: " + loggerContextName,
-				Collections.emptyMap(), loggerContext.getLogLevels());
+		settle(loggerContextConfigTimeout);
+		assertThat(loggerContext.getLogLevels()).as("Unexpected loglevels for context named: " + loggerContextName).isEqualTo(Collections.emptyMap());
 	}
 
 	private Dictionary<String,String> getLogLevelConfigs(
@@ -678,9 +665,10 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 		return result;
 	}
 
+	@Test
 	public void testRootContextAncestorsEffectiveLogLevel() {
 		Collection<LogReader> readers = Collections.singletonList(reader);
-		Bundle b = getContext().getBundle();
+		Bundle b = context.getBundle();
 		Logger logger = logService.getLogger(getClass());
 		String ancestor = logger.getName();
 
@@ -711,26 +699,23 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 			Collection<LogReader> readers) {
 		rootContext.setLogLevels(Collections.singletonMap(ancestor, level));
 
-		assertEquals("Wrong effective level.", level,
-				rootContext.getEffectiveLogLevel(logger.getName()));
-		assertEquals("Wrong effective level.", level,
-				bsnContext.getEffectiveLogLevel(logger.getName()));
-		assertEquals("Wrong effective level.", level,
-				bsnVersionContext.getEffectiveLogLevel(logger.getName()));
-		assertEquals("Wrong effective level.", level, bsnVersionLocationContext
-				.getEffectiveLogLevel(logger.getName()));
+		assertThat(rootContext.getEffectiveLogLevel(logger.getName())).as("Wrong effective level.").isEqualTo(level);
+		assertThat(bsnContext.getEffectiveLogLevel(logger.getName())).as("Wrong effective level.").isEqualTo(level);
+		assertThat(bsnVersionContext.getEffectiveLogLevel(logger.getName())).as("Wrong effective level.").isEqualTo(level);
+		assertThat(bsnVersionLocationContext
+				.getEffectiveLogLevel(logger.getName())).as("Wrong effective level.").isEqualTo(level);
 
 		switch (level) {
 			case TRACE :
-				assertTrue("Trace should be enabled.", logger.isTraceEnabled());
+				assertThat(logger.isTraceEnabled()).as("Trace should be enabled.").isTrue();
 			case DEBUG :
-				assertTrue("Debug should be enabled.", logger.isDebugEnabled());
+				assertThat(logger.isDebugEnabled()).as("Debug should be enabled.").isTrue();
 			case INFO :
-				assertTrue("Info should be enabled.", logger.isInfoEnabled());
+				assertThat(logger.isInfoEnabled()).as("Info should be enabled.").isTrue();
 			case WARN :
-				assertTrue("Warn should be enabled.", logger.isWarnEnabled());
+				assertThat(logger.isWarnEnabled()).as("Warn should be enabled.").isTrue();
 			case ERROR :
-				assertTrue("Error should be enabled.", logger.isErrorEnabled());
+				assertThat(logger.isErrorEnabled()).as("Error should be enabled.").isTrue();
 			case AUDIT :
 			default :
 				break;
@@ -842,15 +827,16 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 		}
 	}
 
+	@Test
 	public void testLoggerContextSetLogLevelsWithBundleInstalledAndLogger()
 			throws Exception {
 		Collection<LogReader> readers = Collections.singletonList(reader);
 		try {
-			tb1 = install("tb1.jar");
+			tb1 = installer.installBundle("tb1.jar", false);
 			tb1.start();
 			Logger logger = logService.getLogger(tb1, TEST_LOGGER_NAME,
 					Logger.class);
-			assertNotNull("Logger cannot be null", logger);
+			assertThat(logger).as("Logger cannot be null").isNotNull();
 			// Bundle is installed and a logger is associated with that bundle
 			// before setting the log level
 			setAndAssertLogLevel(tb1.getSymbolicName(), TEST_LOGGER_NAME);
@@ -863,18 +849,19 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 		}
 	}
 
+	@Test
 	public void testLoggerContextSetLogLevelsWithBundleInstalledAndNoLogger()
 			throws Exception {
 		Collection<LogReader> readers = Collections.singletonList(reader);
 		try {
-			tb1 = install("tb1.jar");
+			tb1 = installer.installBundle("tb1.jar", false);
 			tb1.start();
 			// Bundle is installed but a logger is not associated with the
 			// bundle before setting the log level
 			setAndAssertLogLevel(tb1.getSymbolicName(), TEST_LOGGER_NAME);
 			Logger logger = logService.getLogger(tb1, TEST_LOGGER_NAME,
 					Logger.class);
-			assertNotNull("Logger cannot be null", logger);
+			assertThat(logger).as("Logger cannot be null").isNotNull();
 			doLoggerLogging(LogLevel.TRACE, tb1, logger, readers);
 		} finally {
 			if (tb1 != null) {
@@ -884,6 +871,7 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 		}
 	}
 
+	@Test
 	public void testLoggerContextSetLogLevelsWithoutBundleAndLogger()
 			throws Exception {
 		Collection<LogReader> readers = Collections.singletonList(reader);
@@ -891,11 +879,11 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 		// the bundle before setting the log level
 		setAndAssertLogLevel("tb1", TEST_LOGGER_NAME);
 		try {
-			tb1 = install("tb1.jar");
+			tb1 = installer.installBundle("tb1.jar", false);
 			tb1.start();
 			Logger logger = logService.getLogger(tb1, TEST_LOGGER_NAME,
 					Logger.class);
-			assertNotNull("Logger cannot be null", logger);
+			assertThat(logger).as("Logger cannot be null").isNotNull();
 			doLoggerLogging(LogLevel.TRACE, tb1, logger, readers);
 		} finally {
 			if (tb1 != null) {
@@ -912,10 +900,8 @@ public class LoggerFactoryTestCase extends AbstractLogTestCase {
 		Map<String,LogLevel> logLevels = loggerContext.getLogLevels();
 		logLevels.put(loggerName, LogLevel.TRACE);
 		loggerContext.setLogLevels(logLevels);
-		assertEquals("Log levels not set for " + loggerContext.getName(),
-                    logLevels, loggerContext.getLogLevels());
-		assertEquals("Wrong effective level", LogLevel.TRACE,
-                    loggerContext.getEffectiveLogLevel(loggerName));
+		assertThat(loggerContext.getLogLevels()).as("Log levels not set for " + loggerContext.getName()).isEqualTo(logLevels);
+		assertThat(loggerContext.getEffectiveLogLevel(loggerName)).as("Wrong effective level").isEqualTo(LogLevel.TRACE);
 
 	}
 

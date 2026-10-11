@@ -17,12 +17,17 @@
  *******************************************************************************/
 package org.osgi.test.cases.log.junit;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -32,7 +37,7 @@ import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogLevel;
 import org.osgi.service.log.LogService;
-import org.osgi.test.support.wiring.Wiring;
+import org.osgi.test.common.wiring.FrameworkWirings;
 
 public class EventsFromFrameworkTestCase extends AbstractLogTestCase {
 	private static final String	EVENTS_FRAMEWORK	= "Events.Framework";
@@ -100,8 +105,8 @@ public class EventsFromFrameworkTestCase extends AbstractLogTestCase {
 
 
 
-	@Override
-	protected void tearDown() throws Exception {
+	@AfterEach
+	public void tearDown() throws Exception {
 		if (eventLogListener != null) {
 			logReaderService.removeLogListener(eventLogListener);
 		}
@@ -109,23 +114,24 @@ public class EventsFromFrameworkTestCase extends AbstractLogTestCase {
 	}
 
 	@SuppressWarnings("deprecation")
+	@Test
 	public void testFrameworkEventsLogged()
 			throws BundleException, IOException {
 		// Only reliable events to test are STARTLEVEL_CHANGED and
 		// PACKAGES_REFRESHED
-		tb1 = install("tb1.jar");
+		tb1 = installer.installBundle("tb1.jar", false);
 		tb1.start();
 
 		eventLogListener = new EventLogListener(EVENTS_FRAMEWORK);
 		logReaderService.addLogListener(eventLogListener);
-		Wiring.synchronousRefreshBundles(getContext(), tb1);
+		FrameworkWirings.refreshBundles(context, tb1);
 
 		Bundle systemBundle = systemBundle();
 		String frameworkEventsLoggerName = EVENTS_FRAMEWORK + "."
 				+ systemBundle.getSymbolicName();
 
 		LogEntry refreshLogEntry = eventLogListener.getEntry(10000);
-		assertNotNull("No entry for refresh.", refreshLogEntry);
+		assertThat(refreshLogEntry).as("No entry for refresh.").isNotNull();
 		assertEventLog(refreshLogEntry, frameworkEventsLoggerName,
 				"FrameworkEvent PACKAGES REFRESHED", systemBundle,
 				LogService.LOG_INFO, LogLevel.INFO, null);
@@ -139,25 +145,26 @@ public class EventsFromFrameworkTestCase extends AbstractLogTestCase {
 		fwkStartLevel.setStartLevel(fwkStartLevel.getStartLevel() - 1);
 		LogEntry startLevelLog2 = eventLogListener.getEntry(10000);
 
-		assertNotNull("No entry for start level change 1.", startLevelLog1);
+		assertThat(startLevelLog1).as("No entry for start level change 1.").isNotNull();
 		assertEventLog(startLevelLog1, frameworkEventsLoggerName,
 				"FrameworkEvent STARTLEVEL CHANGED", systemBundle,
 				LogService.LOG_INFO, LogLevel.INFO, null);
 
-		assertNotNull("No entry for start level change 2.", startLevelLog2);
+		assertThat(startLevelLog2).as("No entry for start level change 2.").isNotNull();
 		assertEventLog(startLevelLog2, frameworkEventsLoggerName,
 				"FrameworkEvent STARTLEVEL CHANGED", systemBundle,
 				LogService.LOG_INFO, LogLevel.INFO, null);
 	}
 
+	@Test
 	public void testBundleEventsLogged() throws BundleException, IOException {
 		eventLogListener = new EventLogListener(EVENTS_BUNDLE);
 		logReaderService.addLogListener(eventLogListener);
 
-		tb1 = install("tb1.jar");
+		tb1 = installer.installBundle("tb1.jar", false);
 		tb1.start();
 		tb1.stop();
-		tb1.update(entryStream("tb1.jar"));
+		tb1.update(context.getBundle().getEntry("tb1.jar").openStream());
 		tb1.start();
 		tb1.stop();
 		tb1.uninstall();
@@ -191,11 +198,12 @@ public class EventsFromFrameworkTestCase extends AbstractLogTestCase {
 		}
 	}
 
+	@Test
 	public void testServiceEventsLogged() {
 		eventLogListener = new EventLogListener(EVENTS_SERVICE);
 		logReaderService.addLogListener(eventLogListener);
 
-		ServiceRegistration<String> testReg = getContext()
+		ServiceRegistration<String> testReg = context
 				.registerService(String.class, "TestService", null);
 		ServiceReference<String> testRef = testReg.getReference();
 		Dictionary<String,String> props = new Hashtable<>();
@@ -213,9 +221,9 @@ public class EventsFromFrameworkTestCase extends AbstractLogTestCase {
 		LogEntry entry = eventLogListener.getEntry(10000);
 		assertEventLog(entry,
 				EVENTS_SERVICE + "."
-						+ getContext().getBundle().getSymbolicName(),
+						+ context.getBundle().getSymbolicName(),
 				"ServiceEvent " + eventType,
-				getContext().getBundle(), logLevel.ordinal(), logLevel,
+				context.getBundle(), logLevel.ordinal(), logLevel,
 				ref);
 	}
 
@@ -233,17 +241,15 @@ public class EventsFromFrameworkTestCase extends AbstractLogTestCase {
 	private void assertEventLog(LogEntry logEntry, String loggerName,
 			String message, Bundle bundle, int level, LogLevel logLevel,
 			ServiceReference< ? > reference) {
-		assertTrue("Wrong logger name.",
-				loggerName.equals(logEntry.getLoggerName()));
-		assertEquals("Wrong message.", message, logEntry.getMessage());
-		assertEquals("Wrong bundle.", bundle, logEntry.getBundle());
-		assertEquals("Wrong level.", level, logEntry.getLevel());
-		assertEquals("Wrong log level.", logLevel, logEntry.getLogLevel());
-		assertEquals("Wrong reference.", reference,
-				logEntry.getServiceReference());
+		assertThat(loggerName).as("Wrong logger name.").isEqualTo(logEntry.getLoggerName());
+		assertThat(logEntry.getMessage()).as("Wrong message.").isEqualTo(message);
+		assertThat(logEntry.getBundle()).as("Wrong bundle.").isEqualTo(bundle);
+		assertThat(logEntry.getLevel()).as("Wrong level.").isEqualTo(level);
+		assertThat(logEntry.getLogLevel()).as("Wrong log level.").isEqualTo(logLevel);
+		assertThat(logEntry.getServiceReference()).as("Wrong reference.").isEqualTo(reference);
 	}
 
 	Bundle systemBundle() {
-		return getContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
+		return context.getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
 	}
 }

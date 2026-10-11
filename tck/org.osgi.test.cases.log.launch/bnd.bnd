@@ -2,7 +2,6 @@
 
 Bundle-Description					: Framework test cases.
 
--conditionalpackage					= org.osgi.test.support.*
 -privatepackage						=  \
 	${p}.junit
 	
@@ -21,6 +20,5 @@ p: org.osgi.test.cases.log.launch
 # way). bnd merges all -make.* entries.
 -make.maven: (*).(jar); type=bnd; recipe="bnd/$1.bnd"
 
-testcases.junit3: ${classes;EXTENDS;junit.framework.TestCase;CONCRETE}
-testcases.junit4: ${classes;HIERARCHY_ANNOTATED;org.junit.Test;CONCRETE}
-Test-Cases: ${sort;${uniq;${testcases.junit3};${testcases.junit4}}}
+testcases.junit5: ${classes;HIERARCHY_INDIRECTLY_ANNOTATED;org.junit.platform.commons.annotation.Testable;CONCRETE}
+Test-Cases: ${sort;${uniq;${testcases.junit5}}}
