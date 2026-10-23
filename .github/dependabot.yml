@@ -8,6 +8,12 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    # The API states the versions it really needs; they change with
+    # the API, not with every new release. The spec module compiles
+    # the same sources with the same dependencies.
+    exclude-paths:
+      - "api/**"
+      - "spec/**"
     groups:
       # Jupiter and Platform only work together: one pull request
       junit:
