@@ -65,6 +65,11 @@ public abstract class LaunchTest {
 				"java.", "org.osgi."
 		};
 
+		// HACK to make plurl work in the TCK
+		private static final String[] PARENT_ONLY_DELEGATION_CONTAINS = {
+				".plurl."
+		};
+
 		public FrameworkClassLoader(URL[] urls, ClassLoader parent) {
 			super(urls, parent);
 			assertThat(parent).as("Cannot have null parent.").isNotNull();
@@ -104,6 +109,11 @@ public abstract class LaunchTest {
 		private static boolean childFirst(String name) {
 			for (int i = PARENT_ONLY_DELEGATION.length - 1; i >= 0; i--) {
 				if (name.startsWith(PARENT_ONLY_DELEGATION[i])) {
+					return false;
+				}
+			}
+			for (int i = PARENT_ONLY_DELEGATION_CONTAINS.length - 1; i >= 0; i--) {
+				if (name.contains(PARENT_ONLY_DELEGATION_CONTAINS[i])) {
 					return false;
 				}
 			}
