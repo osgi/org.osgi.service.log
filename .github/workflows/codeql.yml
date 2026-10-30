@@ -15,4 +15,4 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    uses: osgi/.github/.github/workflows/codeql.yml@main
+    uses: osgi/.github/.github/workflows/codeql.yml@2608490dbf73ab697b457a9125b0b3ba462b6d72 # 0.0.1
