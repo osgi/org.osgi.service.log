@@ -18,7 +18,7 @@ jobs:
       contents: read
       # the TCK test report is published as a check run
       checks: write
-    uses: osgi/.github/.github/workflows/spec-build.yml@main
+    uses: osgi/.github/.github/workflows/spec-build.yml@2608490dbf73ab697b457a9125b0b3ba462b6d72 # 0.0.1
     secrets: inherit
     with:
       deploy: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
