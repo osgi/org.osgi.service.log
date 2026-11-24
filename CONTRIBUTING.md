@@ -1,3 +1,5 @@
+<!-- Managed by otterdog blueprint require-contributing. Do not edit here: change it in https://github.com/osgi/.eclipsefdn (otterdog/blueprints). -->
+
 # Contributing to the OSGi Specification Project
 
 Here are instructions to get you started.
@@ -5,85 +7,85 @@ They are probably not perfect, please let us know if anything feels wrong or inc
 
 ## Project
 
-[https://github.com/osgi/osgi](https://github.com/osgi/osgi) is the main git repository for the [OSGi Specification Project](https://projects.eclipse.org/projects/technology.osgi).
+This repository, [org.osgi.service.log](https://github.com/osgi/org.osgi.service.log), is part of the [OSGi Specification Project](https://projects.eclipse.org/projects/technology.osgi).
+Depending on the specification, it holds the API (`api/`), the specification chapter (`spec/`) and the TCK (`tck/`).
+The repositories of the other specifications are listed in the [osgi organization](https://github.com/osgi).
+The archived [osgi/osgi](https://github.com/osgi/osgi) monorepo keeps the history up to the split and the tags of the earlier releases.
+
 Our primary written communication channel is the project's email list: [osgi-dev@eclipse.org](https://accounts.eclipse.org/mailing-list/osgi-dev).
 We also have a [Slack workspace](https://osgiwg.slack.com) for more informal communications.
 Contact a project committer for an invite to the Slack workspace.
+The [README](README.md#contact) lists all contact channels, including the spec call.
 
-Issues can be reported in the [GitHub issue tracker](https://github.com/osgi/osgi/issues).
+Issues can be reported in the [GitHub issue tracker](https://github.com/osgi/org.osgi.service.log/issues) of this repository.
 
 ## Build Environment
 
-The only thing you need to build OSGi is Java.
-We require Java 8.
-If your main JDK is higher than 8 you can set it on each run by adding `-Dorg.gradle.java.home=<pathToYourJDK8>` to the Gradle command.
+You need a JDK and [Apache Maven](https://maven.apache.org/).
+CI builds with JDK 21; the API is compiled for Java 8 (`release 8`), so a newer JDK is fine.
 
-We use Gradle to build and the repository includes `gradlew`.
+- `mvn clean verify` builds everything in the repository and runs the tests and the TCK.
+- `mvn -Pjavadoc-check package` checks the javadoc the same way CI does.
 
-- `./gradlew :build :publish` - Builds and releases the artifacts into `cnf/generated/repo`.
-- `./gradlew :osgi.specs:specifications` - Builds the specifications into `osgi.specs/generated`.
+The version lives in `.mvn/maven.config`; the parent pom `org.osgi:org.osgi.maven.pom.parent` resolves from Sonatype Central snapshots, which the reactor pom declares.
 
-We use [GitHub Actions](https://github.com/osgi/osgi/actions?query=workflow%3A%22CI%20Build%22) for continuous integration and the repo includes a `.github/workflows/cibuild.yml` file to build via GitHub Actions.
+We use GitHub Actions for continuous integration.
+The workflows in `.github/workflows` call reusable workflows in [osgi/.github](https://github.com/osgi/.github), where the CI logic lives.
 
-### Building the Specifications
+### Building the Specification
 
-The specifications can be built in different formats.
-Currently available are `html` and `pdf`.
-You can also build a zip file of the complete html format.
+Where the repository has a `spec/` folder, its module renders the chapter as PDF and as HTML.
+To build it without running the tests:
 
-The following tasks can be used:
+```script
+mvn -DskipTests package
+```
 
-- `./gradlew :osgi.specs:core.pdf`
-- `./gradlew :osgi.specs:core.html`
-- `./gradlew :osgi.specs:core.zip`
-- `./gradlew :osgi.specs:cmpn.pdf`
-- `./gradlew :osgi.specs:cmpn.html`
-- `./gradlew :osgi.specs:cmpn.zip`
+The results are in `spec/*/target/spec/pdf/` and `spec/*/target/spec/html/`, plus a zip of the HTML in `spec/*/target/`.
 
 ## IDE Setup
 
-Prerequisites are Eclipse ("Eclipse IDE for Java Developers") and [Bndtools](https://bndtools.org/).
+Prerequisites are Eclipse ("Eclipse IDE for Java Developers", which includes Maven support) and [Bndtools](https://bndtools.org/).
 
-Before importing the project into Eclipse, it is recommended to do a full build as described above.
-Then use `Import...` > `Existing Projects into Workspace` in Eclipse.
+Use `Import...` > `Maven` > `Existing Maven Projects` in Eclipse and select the repository root.
 
-### Run / Debug a TCK
+### Run / Debug the TCK
 
-In Eclipse, the TCK tests for a project can be run using `Run As` >  `Bnd OSGi Test Launcher (JUnit)` or debugged using `Debug As`/`Debug As` >  `Bnd OSGi Test Launcher (JUnit)`.
-
-From the command line, you use the `testOSGi` Gradle task of the project. For example, run the TCK for Remote Service Admin using this command:
+Where the repository has a `tck/` folder, the TCK runs in an OSGi framework against a compatible implementation.
+The `tck.bndrun` file of each run module under `tck/` configures the framework and the implementation.
+To run only the TCK from the command line:
 
 ```script
-./gradlew :org.osgi.test.cases.remoteserviceadmin:testOSGi
+mvn -pl tck -am -amd verify
 ```
 
-When running the TCK from the TCK project folder, you are running the TCK in git working directory while the TCK must run, for compatibility testing purposes, outside of the development environment.
-The `osgi.tck` project packages the TCKs into the form for which users will be expected to run the TCKs.
-The CI build will execute the TCKs using the packaged form built by the `osgi.tck` project rather than running the `testOSGi` tasks.
+Each run module writes its JUnit report to its `target/test-reports/` folder.
+
+In Eclipse with Bndtools, open a `tck.bndrun` and use `Run As` > `Bnd OSGi Test Launcher (JUnit)`, or `Debug As` with the same launcher.
 
 ## Workflow
 
 We use [git triangular workflow](https://github.blog/2015-07-29-git-2-5-including-multiple-worktrees-and-triangular-workflows/).
-This means you should not push contributions directly into the [main OSGi repository](https://github.com/osgi/osgi).
+This means you should not push contributions directly into the main repository, [org.osgi.service.log](https://github.com/osgi/org.osgi.service.log) in the osgi organization.
 All contributions should come in through pull requests.
-So each contributor will need to [fork the main OSGi repository](https://github.com/osgi/osgi/fork) on GitHub.
+So each contributor will need to [fork the main repository](https://github.com/osgi/org.osgi.service.log/fork) on GitHub.
 All contributions are made as commits to your fork.
-Then you submit a pull request to have them considered for merging into the main OSGi repository.
+Then you submit a pull request to have them considered for merging into the main repository.
 
 ### Setting up the triangular workflow
 
-After forking the main OSGi repository on GitHub, you can clone the main repository to your system:
+After forking the main repository on GitHub, you can clone the main repository to your system:
 
 ```script
-git clone https://github.com/osgi/osgi.git
+git clone https://github.com/osgi/org.osgi.service.log.git
 ```
 
 This will clone the main repository to a local repository on your disk and set up the `origin` remote in Git.
-Next you will set up the the second side of the triangle to your fork repository.
+Next you will set up the second side of the triangle to your fork repository.
 
 ```script
-cd osgi
-git remote add fork git@github.com:github-user/osgi.git
+cd org.osgi.service.log
+git remote add fork git@github.com:github-user/org.osgi.service.log.git
 ```
 
 Make sure to replace the URL with the SSH URL to your fork repository on GitHub.
@@ -125,7 +127,7 @@ From time-to-time, generally when making a specification release, the `.design` 
 ### Requirements discussion
 
 The purpose of the requirements discussion is to engage the project committers in the discussion about the new feature and to more properly understand the terminology, purpose, use cases, and requirements for the new feature.
-A new requirements discussion must be started by first opening a new tracking [issue](https://github.com/osgi/osgi/issues) and labeling the issue with the [`requirements`](https://github.com/osgi/osgi/labels/requirements) label.
+A new requirements discussion must be started by first opening a new tracking [issue](https://github.com/osgi/org.osgi.service.log/issues) and labeling the issue with the `requirements` label.
 Then a new branch should be created from the tip of the `main` branch with the branch name _requirements/XXX_ where _XXX_ is the number of the created tracking issue.
 
 In this new branch, create a `requirements-XXX.md` (or `requirements-XXX.adoc`) requirements document in the `.design` folder.
@@ -144,10 +146,10 @@ The requirements document should include the following items for the requirement
 - Use Cases - Provide several use cases which can demonstrate the actors and how they will use the new feature to address the problem(s).
 - Requirements - This is a list of requirements the new feature is to address.
 
-Once your _requirements/XXX_ branch has your commit with the new requirements document, push this branch your fork and make a pull request to the [main OSGi repository](https://github.com/osgi/osgi).
-This pull request will be used to confirm you have signed the [ECA](#legal-considerations) and will be used as the basis for creating the _requirements/XXX_ branch in the main OSGi repository.
-A project committer must [create the new _requirements/XXX_ branch](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-and-deleting-branches-within-your-repository#creating-a-branch) in the main OSGi repository and then [change the base branch of the pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/changing-the-base-branch-of-a-pull-request) to the newly created _requirements/XXX_ branch in the main OSGi repository.
-At this point, the pull request can be merged into the main OSGi repository.
+Once your _requirements/XXX_ branch has your commit with the new requirements document, push this branch to your fork and make a pull request to the main repository.
+This pull request will be used to confirm you have signed the [ECA](#legal-considerations) and will be used as the basis for creating the _requirements/XXX_ branch in the main repository.
+A project committer must [create the new _requirements/XXX_ branch](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-and-deleting-branches-within-your-repository#creating-a-branch) in the main repository and then [change the base branch of the pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/changing-the-base-branch-of-a-pull-request) to the newly created _requirements/XXX_ branch in the main repository.
+At this point, the pull request can be merged into the main repository.
 
 Discussion on the requirements document can take place in the created issue and updates to the requirements document can be made via additional pull requests against the _requirements/XXX_ branch.
 
@@ -160,7 +162,7 @@ If the requirements discussion successfully concludes, the _requirements/XXX_ br
 
 The purpose of the design discussion is to engage the project committers in the discussion about the design for a new feature and its place in the overall OSGi architecture.
 We want to ensure that sufficient up-front discussion of a new feature design is done in a branch before committing work to the `main` branch.
-A new design discussion must be started by first opening a new tracking [issue](https://github.com/osgi/osgi/issues) and labeling the issue with the [`design`](https://github.com/osgi/osgi/labels/design) label.
+A new design discussion must be started by first opening a new tracking [issue](https://github.com/osgi/org.osgi.service.log/issues) and labeling the issue with the `design` label.
 Then a new branch should be created from the tip of the `main` branch with the branch name _design/XXX_ where _XXX_ is the number of the created design tracking issue.
 
 In this new branch, create a `design-XXX.md` (or `design-XXX.adoc`) design document in the `.design` folder.
@@ -183,10 +185,10 @@ But it is the starting point for that.
 - Data Transfer Objects - DTOs are defined and used in many specifications.
 Should this new design define any DTOs?
 
-Once your _design/XXX_ branch has your commit with the new design document, along with any supporting API, code, etc., push this branch your fork and make a pull request to the [main OSGi repository](https://github.com/osgi/osgi).
-This pull request will be used to confirm you have signed the [ECA](#legal-considerations) and will be used as the basis for creating the _design/XXX_ branch in the main OSGi repository.
-A project committer must [create the new _design/XXX_ branch](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-and-deleting-branches-within-your-repository#creating-a-branch) in the main OSGi repository and then [change the base branch of the pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/changing-the-base-branch-of-a-pull-request) to the newly created _design/XXX_ branch in the main OSGi repository.
-At this point, the pull request can be merged into the main OSGi repository.
+Once your _design/XXX_ branch has your commit with the new design document, along with any supporting API, code, etc., push this branch to your fork and make a pull request to the main repository.
+This pull request will be used to confirm you have signed the [ECA](#legal-considerations) and will be used as the basis for creating the _design/XXX_ branch in the main repository.
+A project committer must [create the new _design/XXX_ branch](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-and-deleting-branches-within-your-repository#creating-a-branch) in the main repository and then [change the base branch of the pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/changing-the-base-branch-of-a-pull-request) to the newly created _design/XXX_ branch in the main repository.
+At this point, the pull request can be merged into the main repository.
 
 Discussion on the design document can take place in the created issue and updates to the design document and any supporting code can be made via additional pull requests against the _design/XXX_ branch.
 
@@ -199,7 +201,7 @@ If the design discussion successfully concludes, the _design/XXX_ branch is merg
 
 ### Create issues
 
-Any significant improvement should be documented as [a GitHub issue](https://github.com/osgi/osgi/issues) before anybody starts working on it.
+Any significant improvement should be documented as [a GitHub issue](https://github.com/osgi/org.osgi.service.log/issues) before anybody starts working on it.
 
 Please take a moment to check that an issue doesn't already exist documenting your bug report or improvement proposal.
 If it does, it never hurts to add a quick 👍 reaction.
@@ -222,7 +224,8 @@ Fork the repository and make changes on your fork in a feature branch:
 
 Write clean code.
 Universally formatted code promotes ease of writing, reading, and maintenance.
-We use Eclipse and each project has Eclipse `.settings` which will properly format the code.
+The basic formatting rules are in `.editorconfig`: tabs for indentation, LF line endings, UTF-8, a final newline and no trailing whitespace.
+Most editors, Eclipse included, apply it automatically or with an [EditorConfig](https://editorconfig.org/) plugin.
 Make sure to avoid unnecessary white space changes which complicate diffs and make reviewing pull requests much more time consuming.
 
 Pull requests descriptions should be as clear as possible and include a reference to all the issues that they address.
@@ -271,21 +274,21 @@ If your pull request was originally a draft, don't forget to remove the draft st
 
 ## Legal considerations
 
-Please read the [Eclipse Foundation policy on accepting contributions via Git](http://wiki.eclipse.org/Development_Resources/Contributing_via_Git).
+Please read the Eclipse Foundation guidance for [contributors](https://www.eclipse.org/projects/handbook/#contributing-contributors) in the Eclipse Foundation Project Handbook.
 
-Your contribution cannot be accepted unless you have a signed [ECA - Eclipse Foundation Contributor Agreement](http://www.eclipse.org/legal/ECA.php) in place.
+Your contribution cannot be accepted unless you are covered by the [ECA - Eclipse Foundation Contributor Agreement](https://www.eclipse.org/legal/ECA.php).
 
 Here is the checklist for contributions to be _acceptable_:
 
-1. [Create an account at Eclipse](https://dev.eclipse.org/site_login/createaccount.php).
+1. [Create an account at Eclipse](https://accounts.eclipse.org/user/register).
 2. Add your GitHub user name in your account settings.
-3. [Log into the project's portal](https://projects.eclipse.org/) and sign the ["Eclipse ECA"](https://projects.eclipse.org/user/sign/cla).
-4. Ensure that you [_sign-off_](https://wiki.eclipse.org/Development_Resources/Contributing_via_Git#Signing_off_on_a_commit) your Git commits.
-5. Ensure that you use the _same_ email address as your Eclipse account in commits.
+3. Sign the [ECA](https://accounts.eclipse.org/user/eca) in your Eclipse account.
+4. Ensure that you [_sign-off_](https://www.eclipse.org/projects/handbook/#resources-commit) your Git commits.
+5. Ensure that you use the _same_ email address as your Eclipse account as the author of your commits.
 6. Include the appropriate copyright notice and license at the top of each file.
 
-Your signing of the ECA will be verified by a webservice called 'ip-validation' that checks the email address that signed-off on your commits has signed the ECA.
-**Note**: This service is case-sensitive, so ensure the email that signed the ECA and that signed-off on your commits is the same, down to the case.
+The `eclipsefdn/eca` check on every pull request verifies that the author email address of each commit belongs to an Eclipse account that is covered by the ECA.
+**Note**: Use the email address of your Eclipse account exactly as registered.
 
 ### Copyright Notice and Licensing Requirements
 
